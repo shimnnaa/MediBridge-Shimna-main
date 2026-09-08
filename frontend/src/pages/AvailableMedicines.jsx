@@ -1,10 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import api from '../utils/api';
-import { Search, Heart, AlertCircle, Clock, CheckCircle, HelpCircle, X, ShieldAlert } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { Search, AlertCircle, Clock, HelpCircle, X, User, Phone, Mail, MapPin, ShieldCheck, Lock } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 const AvailableMedicines = () => {
+  const { user } = useAuth();
+  const isRejected = user?.status === 'rejected';
+  const isPending = user?.status === 'pending';
+  const isBeneficiaryOrNgo = user?.role === 'beneficiary' || user?.role === 'ngo';
+  const isApprovedNgo = isBeneficiaryOrNgo && (user?.status === 'approved' || user?.status === 'active');
+  const isAdmin = user?.role === 'admin';
+  const canViewDonorContact = isAdmin || isApprovedNgo;
+
   const [medicines, setMedicines] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -37,12 +46,23 @@ const AvailableMedicines = () => {
     fetchMedicines();
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && selectedMed && !submitting) {
+        handleCloseModal();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedMed, submitting]);
+
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     fetchMedicines(search);
   };
 
   const handleOpenRequestModal = (medicine) => {
+    if (isRejected) return;
     setSelectedMed(medicine);
     setReqQty(1);
     setReason('');
@@ -58,6 +78,11 @@ const AvailableMedicines = () => {
     e.preventDefault();
     setError('');
     setSuccess('');
+
+    if (isRejected) {
+      setError('Your account is restricted. You cannot submit medicine requests.');
+      return;
+    }
 
     if (!reqQty || reqQty <= 0) {
       setError('Please request a valid quantity.');
@@ -112,6 +137,30 @@ const AvailableMedicines = () => {
 
   return (
     <div style={styles.page} className="animate-fade-in">
+      {isRejected && (
+        <div style={{ ...styles.alertBanner, background: 'var(--status-rejected-bg)', borderColor: 'rgba(220, 53, 69, 0.2)' }}>
+          <AlertCircle size={22} style={{ flexShrink: 0, color: 'var(--status-rejected)' }} />
+          <div>
+            <h4 style={{ color: 'var(--status-rejected)', marginBottom: '4px' }}>Account Restricted</h4>
+            <p style={{ fontSize: '0.9rem', color: 'hsl(354, 70%, 35%)' }}>
+              Your account has been restricted by the administrator. Please contact support.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {isPending && isBeneficiaryOrNgo && (
+        <div style={{ ...styles.alertBanner, background: 'var(--status-pending-bg)', borderColor: 'rgba(217, 119, 6, 0.3)' }}>
+          <Clock size={22} style={{ flexShrink: 0, color: 'var(--status-pending)' }} />
+          <div>
+            <h4 style={{ color: '#b45309', marginBottom: '4px' }}>NGO Registration Under Review</h4>
+            <p style={{ fontSize: '0.9rem', color: '#92400e' }}>
+              Your NGO account is currently pending administrative verification. Donor contact details will become visible once your account receives approval from an administrator.
+            </p>
+          </div>
+        </div>
+      )}
+
       <div style={styles.headerRow}>
         <div>
           <h1 style={styles.title}>Available Medicines</h1>
@@ -180,11 +229,78 @@ const AvailableMedicines = () => {
                       Expires: {new Date(med.expiryDate).toLocaleDateString()} ({daysLeft} days remaining)
                     </span>
                   </div>
+
+                  {/* Donor Contact Details Section */}
+                  <div style={styles.donorSection}>
+                    <div style={styles.donorSectionHeader}>
+                      <span style={styles.donorSectionTitle}>Donor Contact Details</span>
+                      {canViewDonorContact && med.donorContactVisible ? (
+                        <span style={styles.approvedBadge}>
+                          <ShieldCheck size={12} /> Admin Approved
+                        </span>
+                      ) : (
+                        <span style={styles.lockedBadge}>
+                          <Lock size={12} /> Requires Admin Approval
+                        </span>
+                      )}
+                    </div>
+
+                    {canViewDonorContact && med.donorContactVisible && med.donor ? (
+                      <div style={styles.donorInfoCard}>
+                        <div style={styles.donorInfoRow}>
+                          <User size={13} style={{ color: 'var(--primary)', flexShrink: 0 }} />
+                          <span style={{ fontWeight: 700, color: 'var(--text-main)', fontSize: '0.88rem' }}>
+                            {med.donor.name || 'Registered Donor'}
+                          </span>
+                        </div>
+                        {med.donor.phone && (
+                          <div style={styles.donorInfoRow}>
+                            <Phone size={13} style={{ color: 'var(--primary)', flexShrink: 0 }} />
+                            <a href={`tel:${med.donor.phone}`} style={styles.donorContactLink} title="Call donor">
+                              {med.donor.phone}
+                            </a>
+                          </div>
+                        )}
+                        {med.donor.email && (
+                          <div style={styles.donorInfoRow}>
+                            <Mail size={13} style={{ color: 'var(--primary)', flexShrink: 0 }} />
+                            <a href={`mailto:${med.donor.email}`} style={styles.donorContactLink} title="Email donor">
+                              {med.donor.email}
+                            </a>
+                          </div>
+                        )}
+                        {med.donor.address && (
+                          <div style={styles.donorInfoRow}>
+                            <MapPin size={13} style={{ color: 'var(--primary)', flexShrink: 0 }} />
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+                              {med.donor.address}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div style={styles.lockedDonorBox}>
+                        <div style={styles.lockedDonorHeader}>
+                          <Lock size={13} style={{ color: '#d97706', flexShrink: 0 }} />
+                          <span style={styles.lockedDonorTitle}>Contact Details Protected</span>
+                        </div>
+                        <p style={styles.lockedDonorDesc}>
+                          Donor contact details become visible for beneficiary NGOs after getting approval from admin.
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div style={styles.cardFooter}>
-                  <button onClick={() => handleOpenRequestModal(med)} className="btn btn-primary" style={styles.requestBtn}>
-                    Request Medicine
+                  <button
+                    onClick={() => handleOpenRequestModal(med)}
+                    className={`btn ${isRejected ? 'btn-disabled' : 'btn-primary'}`}
+                    style={styles.requestBtn}
+                    disabled={isRejected}
+                    title={isRejected ? 'Account restricted' : 'Request medicine'}
+                  >
+                    {isRejected ? 'Account Restricted' : 'Request Medicine'}
                   </button>
                 </div>
               </div>
@@ -193,21 +309,69 @@ const AvailableMedicines = () => {
         </div>
       )}
 
-      {/* Request Modal */}
-      {selectedMed && (
-        <div style={styles.modalBackdrop}>
-          <div style={styles.modalContent} className="card animate-fade-in">
+      {/* Request Modal Portal */}
+      {selectedMed && typeof document !== 'undefined' && createPortal(
+        <div
+          style={styles.modalBackdrop}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !submitting) {
+              handleCloseModal();
+            }
+          }}
+        >
+          <div style={styles.modalContent} className="card animate-fade-in" onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader}>
-              <h3>Request Medicine</h3>
-              <button onClick={handleCloseModal} style={styles.closeBtn}>
+              <h3 style={{ fontSize: '1.3rem', fontWeight: 800 }}>Request Medicine</h3>
+              <button onClick={handleCloseModal} style={styles.closeBtn} type="button" aria-label="Close modal">
                 <X size={20} />
               </button>
             </div>
 
             <div style={styles.modalBody}>
               <div style={styles.modalMedInfo}>
-                <h4>{selectedMed.name}</h4>
-                <p>Available quantity: <strong>{selectedMed.quantity}</strong> | Expiry: <strong>{new Date(selectedMed.expiryDate).toLocaleDateString()}</strong></p>
+                <h4 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '4px' }}>{selectedMed.name}</h4>
+                <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)' }}>
+                  Available quantity: <strong style={{ color: 'var(--primary)' }}>{selectedMed.quantity} unit(s)</strong> | Expiry: <strong>{new Date(selectedMed.expiryDate).toLocaleDateString()}</strong>
+                </p>
+
+                {/* Modal Donor Details Preview */}
+                {canViewDonorContact && selectedMed.donorContactVisible && selectedMed.donor ? (
+                  <div style={styles.modalDonorBox}>
+                    <div style={styles.modalDonorHeader}>
+                      <ShieldCheck size={14} style={{ color: 'var(--primary)' }} />
+                      <span style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '0.85rem' }}>
+                        Verified Donor Information (Admin Approved Access)
+                      </span>
+                    </div>
+                    <div style={styles.modalDonorContent}>
+                      <div><strong>Donor:</strong> {selectedMed.donor.name || 'Registered Donor'}</div>
+                      {selectedMed.donor.phone && (
+                        <div>
+                          <strong>Phone:</strong>{' '}
+                          <a href={`tel:${selectedMed.donor.phone}`} style={styles.donorContactLink}>
+                            {selectedMed.donor.phone}
+                          </a>
+                        </div>
+                      )}
+                      {selectedMed.donor.email && (
+                        <div>
+                          <strong>Email:</strong>{' '}
+                          <a href={`mailto:${selectedMed.donor.email}`} style={styles.donorContactLink}>
+                            {selectedMed.donor.email}
+                          </a>
+                        </div>
+                      )}
+                      {selectedMed.donor.address && <div><strong>Location:</strong> {selectedMed.donor.address}</div>}
+                    </div>
+                  </div>
+                ) : (
+                  <div style={styles.modalLockedBox}>
+                    <Lock size={13} style={{ color: '#d97706', flexShrink: 0 }} />
+                    <span style={{ fontSize: '0.82rem', color: '#92400e' }}>
+                      Donor contact details become visible for beneficiary NGOs after getting approval from admin.
+                    </span>
+                  </div>
+                )}
               </div>
 
               {error && <div style={styles.errorAlert}>{error}</div>}
@@ -215,7 +379,7 @@ const AvailableMedicines = () => {
 
               <form onSubmit={handleRequestSubmit} style={styles.modalForm}>
                 <div className="form-group">
-                  <label htmlFor="reqQty">Requested Quantity *</label>
+                  <label htmlFor="reqQty">Requested Quantity (Units) *</label>
                   <input
                     id="reqQty"
                     type="number"
@@ -237,7 +401,7 @@ const AvailableMedicines = () => {
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
                     className="form-control"
-                    style={{ minHeight: '100px', resize: 'vertical' }}
+                    style={{ minHeight: '110px', resize: 'vertical' }}
                     disabled={submitting || success}
                     required
                   />
@@ -254,7 +418,8 @@ const AvailableMedicines = () => {
               </form>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -265,6 +430,16 @@ const styles = {
     padding: '40px 24px',
     maxWidth: '1200px',
     margin: '0 auto',
+  },
+  alertBanner: {
+    display: 'flex',
+    gap: '16px',
+    alignItems: 'center',
+    background: 'var(--status-pending-bg)',
+    border: '1px solid rgba(217, 119, 6, 0.2)',
+    padding: '16px 20px',
+    borderRadius: '12px',
+    marginBottom: '24px',
   },
   title: {
     fontSize: '2rem',
@@ -369,6 +544,127 @@ const styles = {
     fontWeight: 600,
     color: 'hsl(38, 90%, 30%)',
   },
+  donorSection: {
+    background: '#f8fafc',
+    border: '1px solid var(--border-color)',
+    borderRadius: '10px',
+    padding: '12px 14px',
+    marginTop: '6px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  },
+  donorSectionHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: '6px',
+    flexWrap: 'wrap',
+  },
+  donorSectionTitle: {
+    fontSize: '0.78rem',
+    fontWeight: 700,
+    color: 'var(--text-muted)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+  },
+  approvedBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px',
+    fontSize: '0.72rem',
+    fontWeight: 700,
+    color: '#0fa57c',
+    background: 'rgba(15, 165, 124, 0.12)',
+    padding: '3px 8px',
+    borderRadius: '12px',
+  },
+  lockedBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px',
+    fontSize: '0.72rem',
+    fontWeight: 700,
+    color: '#b45309',
+    background: 'rgba(217, 119, 6, 0.12)',
+    padding: '3px 8px',
+    borderRadius: '12px',
+  },
+  donorInfoCard: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
+    background: '#ffffff',
+    border: '1px solid rgba(15, 165, 124, 0.2)',
+    borderRadius: '8px',
+    padding: '10px 12px',
+  },
+  donorInfoRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontSize: '0.85rem',
+  },
+  donorContactLink: {
+    color: 'var(--primary)',
+    fontWeight: 600,
+    textDecoration: 'none',
+  },
+  lockedDonorBox: {
+    background: '#fffbeb',
+    border: '1px solid rgba(217, 119, 6, 0.25)',
+    borderRadius: '8px',
+    padding: '10px 12px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+  },
+  lockedDonorHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+  },
+  lockedDonorTitle: {
+    fontSize: '0.82rem',
+    fontWeight: 700,
+    color: '#92400e',
+  },
+  lockedDonorDesc: {
+    fontSize: '0.78rem',
+    color: '#b45309',
+    lineHeight: 1.4,
+    margin: 0,
+  },
+  modalDonorBox: {
+    marginTop: '10px',
+    background: 'rgba(15, 165, 124, 0.08)',
+    border: '1px solid rgba(15, 165, 124, 0.25)',
+    borderRadius: '8px',
+    padding: '10px 12px',
+  },
+  modalDonorHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    marginBottom: '6px',
+  },
+  modalDonorContent: {
+    fontSize: '0.85rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+    color: 'var(--text-main)',
+  },
+  modalLockedBox: {
+    marginTop: '10px',
+    background: '#fffbeb',
+    border: '1px solid rgba(217, 119, 6, 0.25)',
+    borderRadius: '8px',
+    padding: '8px 12px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  },
   cardFooter: {
     marginTop: 'auto',
     paddingTop: '10px',
@@ -383,20 +679,29 @@ const styles = {
     left: 0,
     right: 0,
     bottom: 0,
-    background: 'rgba(15, 23, 42, 0.4)',
-    backdropFilter: 'blur(4px)',
+    width: '100vw',
+    height: '100vh',
+    background: 'rgba(15, 23, 42, 0.6)',
+    backdropFilter: 'blur(5px)',
+    WebkitBackdropFilter: 'blur(5px)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 200,
+    zIndex: 9999,
     padding: '20px',
+    overflowY: 'auto',
   },
   modalContent: {
-    maxWidth: '500px',
+    maxWidth: '520px',
     width: '100%',
-    background: '#fff',
+    background: '#ffffff',
     padding: '28px',
-    boxShadow: 'var(--shadow-lg)',
+    borderRadius: '16px',
+    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+    position: 'relative',
+    margin: 'auto',
+    maxHeight: '90vh',
+    overflowY: 'auto',
   },
   modalHeader: {
     display: 'flex',

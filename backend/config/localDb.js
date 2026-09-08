@@ -465,6 +465,12 @@ const matchesQuery = (item, query = {}) => {
       continue;
     }
 
+    if (typeof value === 'object' && value !== null && Array.isArray(value.$in)) {
+      const itemVal = item[key] && item[key]._id ? String(item[key]._id) : String(item[key]);
+      if (!value.$in.map(String).includes(itemVal)) return false;
+      continue;
+    }
+
     if (String(item[key]) !== String(value)) {
       return false;
     }

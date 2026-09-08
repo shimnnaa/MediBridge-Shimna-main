@@ -4,12 +4,14 @@ const {
   requestMedicine,
   getMyRequests,
   getRequestById,
+  getDonorAllocations,
 } = require('../controllers/requestController');
 const { protect, authorize, checkApprovedBeneficiary } = require('../middleware/authMiddleware');
 
 router.route('/')
   .post(protect, authorize('beneficiary', 'ngo'), checkApprovedBeneficiary, requestMedicine);
 router.get('/my-requests', protect, authorize('beneficiary', 'ngo'), getMyRequests);
+router.get('/donor-allocations', protect, authorize('donor', 'admin'), getDonorAllocations);
 router.get('/:id', protect, getRequestById);
 
 module.exports = router;

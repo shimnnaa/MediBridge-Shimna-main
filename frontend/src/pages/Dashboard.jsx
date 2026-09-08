@@ -11,11 +11,9 @@ import {
   ShieldCheck,
   Activity,
   AlertCircle,
-  TrendingUp,
   FileText,
   Clock,
-  MapPin,
-  Building
+  CheckCircle2,
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -27,6 +25,7 @@ const Dashboard = () => {
     case 'admin':
       return <AdminDashboard user={user} />;
     case 'beneficiary':
+    case 'ngo':
       return <BeneficiaryDashboard user={user} />;
     case 'donor':
     default:
@@ -38,7 +37,7 @@ const Dashboard = () => {
    1. DONOR DASHBOARD
    ========================================================================== */
 const DonorDashboard = ({ user }) => {
-  const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0 });
+  const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0, recipients: 0 });
   const [recent, setRecent] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -54,8 +53,9 @@ const DonorDashboard = ({ user }) => {
           const total = list.length;
           const pending = list.filter(m => m.status === 'pending').length;
           const approved = list.filter(m => m.status === 'approved').length;
+          const recipients = list.reduce((sum, m) => sum + (m.recipientCount || 0), 0);
           
-          setStats({ total, pending, approved });
+          setStats({ total, pending, approved, recipients });
         }
       } catch (err) {
         console.error('Error fetching donor dashboard data:', err);
@@ -105,8 +105,18 @@ const DonorDashboard = ({ user }) => {
             <ShieldCheck size={22} />
           </div>
           <div>
-            <span style={styles.statLabel}>Approved listings</span>
+            <span style={styles.statLabel}>Approved Listings</span>
             <h3 style={styles.statNumber}>{stats.approved}</h3>
+          </div>
+        </div>
+
+        <div style={styles.statCard} className="card">
+          <div style={{ ...styles.statIconContainer, background: 'rgba(0, 180, 216, 0.1)', color: 'var(--secondary)' }}>
+            <Users size={22} />
+          </div>
+          <div>
+            <span style={styles.statLabel}>Beneficiaries Reached</span>
+            <h3 style={styles.statNumber}>{stats.recipients}</h3>
           </div>
         </div>
       </div>
@@ -132,8 +142,8 @@ const DonorDashboard = ({ user }) => {
                     <th>Medicine Name</th>
                     <th>Expiry Date</th>
                     <th>Qty</th>
-                    <th>Condition</th>
                     <th>Status</th>
+                    <th>Approved Recipient(s)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -142,11 +152,32 @@ const DonorDashboard = ({ user }) => {
                       <td style={styles.medName}>{med.name}</td>
                       <td>{new Date(med.expiryDate).toLocaleDateString()}</td>
                       <td>{med.originalQuantity}</td>
-                      <td>{med.condition}</td>
                       <td>
-                        <span className={`status-badge ${med.status}`}>
-                          {med.status.toUpperCase()}
+                        <span className={`status-badge ${med.status || 'pending'}`}>
+                          {(med.status || 'pending').toUpperCase()}
                         </span>
+                      </td>
+                      <td>
+                        {med.recipientCount > 0 ? (
+                          <Link
+                            to="/my-donations"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              color: 'var(--status-approved)',
+                              fontWeight: 700,
+                              fontSize: '0.8rem',
+                              textDecoration: 'underline',
+                            }}
+                          >
+                            <CheckCircle2 size={13} /> {med.recipientCount} NGO Approved ({med.totalAllocatedQuantity} units)
+                          </Link>
+                        ) : med.status === 'approved' ? (
+                          <span style={{ color: 'var(--primary)', fontSize: '0.8rem', fontWeight: 600 }}>In Stock (0 claims)</span>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Awaiting Review</span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -157,7 +188,7 @@ const DonorDashboard = ({ user }) => {
 
           {recent.length > 0 && (
             <div style={styles.panelFooter}>
-              <Link to="/my-donations" style={styles.footerLink}>View All Donations <ClipboardList size={14} /></Link>
+              <Link to="/my-donations" style={styles.footerLink}>View All Donations & Impact <ClipboardList size={14} /></Link>
             </div>
           )}
         </div>
@@ -212,13 +243,25 @@ const BeneficiaryDashboard = ({ user }) => {
 
   return (
     <div style={styles.dashboardContainer} className="animate-fade-in">
-      {isPendingNgo && (
-        <div style={styles.alertBanner}>
-          <AlertCircle size={22} style={{ flexShrink: 0 }} />
+      {user.status === 'rejected' && (
+        <div style={{ ...styles.alertBanner, background: 'var(--status-rejected-bg)', borderColor: 'rgba(220, 53, 69, 0.2)' }}>
+          <AlertCircle size={22} style={{ flexShrink: 0, color: 'var(--status-rejected)' }} />
           <div>
-            <h4 style={{ color: 'var(--status-pending)', marginBottom: '4px' }}>NGO Account Awaiting Verification</h4>
-            <p style={{ fontSize: '0.9rem', color: 'hsl(38, 90%, 25%)' }}>
-              Your account details are under review by the administrator. You can review the interface, but you will not be authorized to submit requests until verified.
+            <h4 style={{ color: 'var(--status-rejected)', marginBottom: '4px' }}>Account Restricted</h4>
+            <p style={{ fontSize: '0.9rem', color: 'hsl(354, 70%, 35%)' }}>
+              Your account registration was restricted by the administrator. Please contact administration.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {isPendingNgo && (
+        <div style={{ ...styles.alertBanner, background: 'var(--status-pending-bg)', borderColor: 'rgba(217, 119, 6, 0.3)' }}>
+          <Clock size={22} style={{ flexShrink: 0, color: 'var(--status-pending)' }} />
+          <div>
+            <h4 style={{ color: '#b45309', marginBottom: '4px' }}>Account Pending Admin Approval</h4>
+            <p style={{ fontSize: '0.9rem', color: '#92400e' }}>
+              Your NGO registration is under review by the administrator. Once approved by admin, full donor contact details and medicine requests will become active.
             </p>
           </div>
         </div>
@@ -226,13 +269,12 @@ const BeneficiaryDashboard = ({ user }) => {
 
       <div style={styles.welcomeRow}>
         <div>
-          <h1 style={styles.title}>NGO Dashboard</h1>
+          <h1 style={styles.title}>{user.role === 'ngo' || user.organizationName ? 'NGO Dashboard' : 'Beneficiary Dashboard'}</h1>
           <p style={styles.subtitle}>Welcome, {user.organizationName || user.name}.</p>
         </div>
         <Link
           to="/available-medicines"
-          className={`btn ${isPendingNgo ? 'btn-disabled' : 'btn-primary'}`}
-          onClick={(e) => isPendingNgo && e.preventDefault()}
+          className="btn btn-primary"
         >
           <Search size={18} /> Search & Request Medicines
         </Link>
@@ -282,9 +324,7 @@ const BeneficiaryDashboard = ({ user }) => {
             <div style={styles.emptyState}>
               <ClipboardList size={40} color="var(--text-muted)" style={{ marginBottom: '10px' }} />
               <p>You haven't requested any medicines yet.</p>
-              {!isPendingNgo && (
-                <Link to="/available-medicines" style={{ marginTop: '10px' }} className="btn btn-secondary btn-sm">Browse Inventory</Link>
-              )}
+              <Link to="/available-medicines" style={{ marginTop: '10px' }} className="btn btn-secondary btn-sm">Browse Inventory</Link>
             </div>
           ) : (
             <div style={styles.tableWrapper}>
@@ -306,8 +346,8 @@ const BeneficiaryDashboard = ({ user }) => {
                       <td>{reqItem.quantity}</td>
                       <td>{new Date(reqItem.requestDate).toLocaleDateString()}</td>
                       <td>
-                        <span className={`status-badge ${reqItem.status}`}>
-                          {reqItem.status.toUpperCase()}
+                        <span className={`status-badge ${reqItem.status || 'pending'}`}>
+                          {(reqItem.status || 'pending').toUpperCase()}
                         </span>
                       </td>
                     </tr>
@@ -341,7 +381,7 @@ const BeneficiaryDashboard = ({ user }) => {
 /* ==========================================================================
    3. ADMIN DASHBOARD
    ========================================================================== */
-const AdminDashboard = ({ user }) => {
+const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -527,7 +567,7 @@ const styles = {
   },
   statsRow: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
     gap: '24px',
   },
   statCard: {

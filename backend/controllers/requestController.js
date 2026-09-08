@@ -22,7 +22,7 @@ const requestMedicine = async (req, res) => {
       return res.status(400).json({ success: false, message: 'This medicine is not verified/available for requests' });
     }
 
-    if (medicine.expiryDate < new Date()) {
+    if (new Date(medicine.expiryDate) < new Date()) {
       return res.status(400).json({ success: false, message: 'This medicine has expired and cannot be requested' });
     }
 
@@ -47,6 +47,7 @@ const requestMedicine = async (req, res) => {
       });
     }
 
+    const now = new Date();
     // Create request
     const request = await Request.create({
       medicine: medicineId,
@@ -54,6 +55,8 @@ const requestMedicine = async (req, res) => {
       quantity,
       reason,
       status: 'pending',
+      requestDate: now,
+      createdAt: now,
     });
 
     return res.status(201).json({
@@ -78,15 +81,47 @@ const getMyRequests = async (req, res) => {
         select: 'name manufacturer batchNumber expiryDate condition donor',
         populate: {
           path: 'donor',
-          select: 'name email phone'
+          select: 'name email phone address'
         }
       })
       .sort({ requestDate: -1 });
 
+    const sanitizedRequests = requests.map((reqDoc) => {
+      const item = reqDoc.toObject ? reqDoc.toObject() : { ...reqDoc };
+
+      // Ensure requestDate has fallback to createdAt
+      if (!item.requestDate && item.createdAt) {
+        item.requestDate = item.createdAt;
+      }
+
+      const isApproved = item.status === 'approved';
+
+      if (item.medicine && typeof item.medicine === 'object') {
+        const med = item.medicine.toObject ? item.medicine.toObject() : { ...item.medicine };
+        if (med.donor && typeof med.donor === 'object') {
+          if (isApproved) {
+            med.donorContactVisible = true;
+          } else {
+            med.donor = {
+              _id: med.donor._id,
+              name: med.donor.name || 'Anonymous Donor',
+            };
+            med.donorContactVisible = false;
+          }
+        } else {
+          med.donorContactVisible = false;
+        }
+        item.medicine = med;
+      }
+
+      item.donorContactVisible = isApproved;
+      return item;
+    });
+
     return res.status(200).json({
       success: true,
-      count: requests.length,
-      data: requests,
+      count: sanitizedRequests.length,
+      data: sanitizedRequests,
     });
   } catch (error) {
     console.error('Get my requests error:', error);
@@ -105,7 +140,7 @@ const getRequestById = async (req, res) => {
         path: 'medicine',
         populate: {
           path: 'donor',
-          select: 'name email phone'
+          select: 'name email phone address'
         }
       });
 
@@ -115,19 +150,113 @@ const getRequestById = async (req, res) => {
 
     // Restrict access: Only admin, or the requester/donor of the medicine can view
     const isRequester = request.requester._id.toString() === req.user._id.toString();
-    const isDonor = request.medicine.donor._id.toString() === req.user._id.toString();
+    const isDonor = request.medicine && request.medicine.donor && request.medicine.donor._id.toString() === req.user._id.toString();
     const isAdmin = req.user.role === 'admin';
 
     if (!isRequester && !isDonor && !isAdmin) {
       return res.status(403).json({ success: false, message: 'Not authorized to view this request' });
     }
 
+    const item = request.toObject ? request.toObject() : { ...request };
+    if (!item.requestDate && item.createdAt) {
+      item.requestDate = item.createdAt;
+    }
+
+    const isApproved = item.status === 'approved';
+    const canSeeDonorDetails = isAdmin || isDonor || isApproved;
+
+    if (item.medicine && typeof item.medicine === 'object') {
+      const med = item.medicine.toObject ? item.medicine.toObject() : { ...item.medicine };
+      if (med.donor && typeof med.donor === 'object') {
+        if (canSeeDonorDetails) {
+          med.donorContactVisible = true;
+        } else {
+          med.donor = {
+            _id: med.donor._id,
+            name: med.donor.name || 'Anonymous Donor',
+          };
+          med.donorContactVisible = false;
+        }
+      } else {
+        med.donorContactVisible = false;
+      }
+      item.medicine = med;
+    }
+    item.donorContactVisible = canSeeDonorDetails;
+
     return res.status(200).json({
       success: true,
-      data: request,
+      data: item,
     });
   } catch (error) {
     console.error('Get request by ID error:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get all approved allocations for medicines donated by current donor
+// @route   GET /api/requests/donor-allocations
+// @access  Private (Donor only)
+const getDonorAllocations = async (req, res) => {
+  try {
+    // 1. Get all medicines donated by this donor
+    const donorMedicines = await Medicine.find({ donor: req.user._id });
+    const medicineMap = new Map();
+    donorMedicines.forEach((m) => {
+      medicineMap.set(String(m._id), m.toObject ? m.toObject() : { ...m });
+    });
+
+    if (medicineMap.size === 0) {
+      return res.status(200).json({
+        success: true,
+        count: 0,
+        data: [],
+      });
+    }
+
+    // 2. Find all approved requests
+    const allApprovedRequests = await Request.find({ status: 'approved' })
+      .populate('requester', 'name email phone address organizationName registrationNumber website role')
+      .sort({ approvedAt: -1, createdAt: -1 });
+
+    // 3. Filter requests where medicine belongs to this donor
+    const donorAllocations = [];
+    allApprovedRequests.forEach((reqDoc) => {
+      const rObj = reqDoc.toObject ? reqDoc.toObject() : { ...reqDoc };
+      const reqMedId = rObj.medicine && rObj.medicine._id ? String(rObj.medicine._id) : String(rObj.medicine);
+
+      if (medicineMap.has(reqMedId)) {
+        const medInfo = medicineMap.get(reqMedId);
+        donorAllocations.push({
+          _id: rObj._id,
+          quantity: rObj.quantity,
+          reason: rObj.reason,
+          status: rObj.status,
+          adminRemarks: rObj.adminRemarks || '',
+          approvedAt: rObj.approvedAt || rObj.updatedAt || rObj.createdAt,
+          requestDate: rObj.requestDate || rObj.createdAt,
+          requester: rObj.requester,
+          medicine: {
+            _id: medInfo._id,
+            name: medInfo.name,
+            batchNumber: medInfo.batchNumber,
+            manufacturer: medInfo.manufacturer,
+            expiryDate: medInfo.expiryDate,
+            condition: medInfo.condition,
+            originalQuantity: medInfo.originalQuantity,
+            remainingQuantity: medInfo.quantity,
+          },
+        });
+      }
+    });
+
+    return res.status(200).json({
+      success: true,
+      count: donorAllocations.length,
+      data: donorAllocations,
+    });
+  } catch (error) {
+    console.error('Get donor allocations error:', error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -136,4 +265,5 @@ module.exports = {
   requestMedicine,
   getMyRequests,
   getRequestById,
+  getDonorAllocations,
 };

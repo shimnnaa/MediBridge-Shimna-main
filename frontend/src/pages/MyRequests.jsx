@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../utils/api';
-import { ArrowLeft, Clock, Phone, Mail, User, HelpCircle, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Clock, Phone, Mail, User, MapPin, ShieldCheck, Lock } from 'lucide-react';
 
 const MyRequests = () => {
   const [requests, setRequests] = useState([]);
@@ -60,7 +60,7 @@ const MyRequests = () => {
                     <th>Qty Requested</th>
                     <th>Request Date</th>
                     <th>Status</th>
-                    <th>Donor Contacts (If Approved)</th>
+                    <th>Donor Contacts (After Admin Approval)</th>
                     <th>Admin Remarks</th>
                   </tr>
                 </thead>
@@ -69,6 +69,8 @@ const MyRequests = () => {
                     const medicine = reqItem.medicine || {};
                     const donor = medicine.donor || {};
                     const isApproved = reqItem.status === 'approved';
+                    const requestDateStr = reqItem.requestDate || reqItem.createdAt;
+                    const formattedDate = requestDateStr ? new Date(requestDateStr).toLocaleDateString() : 'N/A';
 
                     return (
                       <tr key={reqItem._id}>
@@ -76,28 +78,63 @@ const MyRequests = () => {
                         <td><code>{medicine.batchNumber || 'N/A'}</code></td>
                         <td>{medicine.expiryDate ? new Date(medicine.expiryDate).toLocaleDateString() : 'N/A'}</td>
                         <td>{reqItem.quantity}</td>
-                        <td>{new Date(reqItem.requestDate).toLocaleDateString()}</td>
+                        <td>{formattedDate}</td>
                         <td>
-                          <span className={`status-badge ${reqItem.status}`}>
-                            {reqItem.status.toUpperCase()}
+                          <span className={`status-badge ${reqItem.status || 'pending'}`}>
+                            {(reqItem.status || 'pending').toUpperCase()}
                           </span>
                         </td>
                         <td style={styles.contactCell}>
                           {isApproved ? (
                             <div style={styles.donorInfoBox}>
-                              <div style={styles.infoRow}><User size={12} /> <span>{donor.name || 'N/A'}</span></div>
-                              {donor.phone && <div style={styles.infoRow}><Phone size={12} /> <span>{donor.phone}</span></div>}
-                              {donor.email && <div style={styles.infoRow}><Mail size={12} /> <a href={`mailto:${donor.email}`} style={styles.mailLink}>{donor.email}</a></div>}
+                              <div style={styles.donorHeaderRow}>
+                                <ShieldCheck size={13} color="var(--primary)" />
+                                <span style={styles.donorHeaderTitle}>Admin Approved Contact</span>
+                              </div>
+                              <div style={styles.infoRow}>
+                                <User size={12} color="var(--primary)" />
+                                <strong>{donor.name || 'Registered Donor'}</strong>
+                              </div>
+                              {donor.phone && (
+                                <div style={styles.infoRow}>
+                                  <Phone size={12} color="var(--primary)" />
+                                  <a href={`tel:${donor.phone}`} style={styles.phoneLink} title="Call donor">
+                                    {donor.phone}
+                                  </a>
+                                </div>
+                              )}
+                              {donor.email && (
+                                <div style={styles.infoRow}>
+                                  <Mail size={12} color="var(--primary)" />
+                                  <a href={`mailto:${donor.email}`} style={styles.mailLink} title="Email donor">
+                                    {donor.email}
+                                  </a>
+                                </div>
+                              )}
+                              {donor.address && (
+                                <div style={styles.infoRow}>
+                                  <MapPin size={12} color="var(--primary)" />
+                                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{donor.address}</span>
+                                </div>
+                              )}
+                            </div>
+                          ) : reqItem.status === 'pending' ? (
+                            <div style={styles.pendingContactBox}>
+                              <div style={styles.pendingContactHeader}>
+                                <Lock size={12} color="#d97706" />
+                                <span style={styles.pendingContactTitle}>Visible After Admin Approval</span>
+                              </div>
+                              <span style={styles.pendingContactSub}>Awaiting admin verification</span>
                             </div>
                           ) : (
-                            <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Visible upon approval</span>
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Not accessible (Request rejected)</span>
                           )}
                         </td>
                         <td style={styles.remarksCell}>
                           {reqItem.status === 'pending' && 'Awaiting administrative verification.'}
                           {reqItem.status === 'rejected' && (
                             <span style={{ color: 'var(--status-rejected)' }}>
-                              <strong>Reason:</strong> {reqItem.adminRemarks || 'Clinical justification unsufficient.'}
+                              <strong>Reason:</strong> {reqItem.adminRemarks || 'Clinical justification insufficient.'}
                             </span>
                           )}
                           {isApproved && (reqItem.adminRemarks || 'Approved. Please coordinate collection using donor contacts.')}
@@ -188,7 +225,20 @@ const styles = {
     background: 'var(--primary-light)',
     padding: '8px 12px',
     borderRadius: '8px',
-    border: '1px solid rgba(15, 165, 124, 0.1)',
+    border: '1px solid rgba(15, 165, 124, 0.2)',
+  },
+  donorHeaderRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+    fontSize: '0.72rem',
+    fontWeight: 700,
+    color: 'var(--primary)',
+    marginBottom: '2px',
+  },
+  donorHeaderTitle: {
+    textTransform: 'uppercase',
+    letterSpacing: '0.3px',
   },
   infoRow: {
     display: 'flex',
@@ -198,9 +248,37 @@ const styles = {
     color: 'hsl(210, 20%, 30%)',
     fontWeight: 600,
   },
+  phoneLink: {
+    color: 'var(--primary)',
+    textDecoration: 'none',
+    fontWeight: 600,
+  },
   mailLink: {
     color: 'var(--primary)',
     textDecoration: 'underline',
+  },
+  pendingContactBox: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '3px',
+    background: '#fffbeb',
+    padding: '8px 10px',
+    borderRadius: '8px',
+    border: '1px solid rgba(217, 119, 6, 0.2)',
+  },
+  pendingContactHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '5px',
+  },
+  pendingContactTitle: {
+    fontSize: '0.76rem',
+    fontWeight: 700,
+    color: '#92400e',
+  },
+  pendingContactSub: {
+    fontSize: '0.72rem',
+    color: '#b45309',
   },
   remarksCell: {
     color: 'var(--text-muted)',
