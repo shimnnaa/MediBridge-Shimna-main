@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
-import { ShieldCheck, UserCheck, HeartHandshake, User, Mail, Lock, Phone, MapPin, Building, FileText, Globe } from 'lucide-react';
+import { ShieldCheck, UserCheck, HeartHandshake, User, Mail, Lock, Phone, MapPin, Building, FileText, Globe, KeyRound, CheckCircle2, RefreshCw } from 'lucide-react';
 
 const Register = () => {
-  const [role, setRole] = useState('donor'); // 'donor' or 'beneficiary'
+  const [role, setRole] = useState('donor'); // 'donor', 'beneficiary', or 'ngo'
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,10 +17,13 @@ const Register = () => {
   const [registrationNumber, setRegistrationNumber] = useState('');
   const [website, setWebsite] = useState('');
 
-  // OTP states
+  // OTP Verification states
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
   const [sendingOtp, setSendingOtp] = useState(false);
+  const [demoOtp, setDemoOtp] = useState('');
+  const [otpMessage, setOtpMessage] = useState('');
 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -28,6 +31,59 @@ const Register = () => {
 
   const { register } = useAuth();
   const navigate = useNavigate();
+
+  const handleSendOtp = async () => {
+    setError('');
+    setOtpMessage('');
+
+    if (!email) {
+      setError('Please enter your email address first to receive the OTP.');
+      return;
+    }
+
+    setSendingOtp(true);
+    try {
+      const res = await api('/auth/send-otp', {
+        method: 'POST',
+        body: { email: email.trim(), phone: phone.trim(), role },
+      });
+
+      if (res.success) {
+        setOtpSent(true);
+        if (res.demoOtp) {
+          setDemoOtp(res.demoOtp);
+          setOtp(res.demoOtp); // Auto-fill for convenience
+        }
+        setOtpMessage(res.message || 'OTP sent successfully!');
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to send OTP. Please check your email.');
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    setError('');
+    if (!otp || otp.length < 4) {
+      setError('Please enter the 6-digit OTP code.');
+      return;
+    }
+
+    try {
+      const res = await api('/auth/verify-otp', {
+        method: 'POST',
+        body: { email: email.trim(), otp: otp.trim() },
+      });
+
+      if (res.success) {
+        setOtpVerified(true);
+        setOtpMessage('✅ OTP Verified Successfully!');
+      }
+    } catch (err) {
+      setError(err.message || 'Invalid OTP code. Please try again.');
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -45,20 +101,10 @@ const Register = () => {
       return;
     }
 
-    if (!otpSent) {
-      setError('Please click "Send OTP" and verify your email address first.');
-      return;
-    }
-
-    if (!otp) {
-      setError('Please enter the verification OTP code sent to your email.');
-      return;
-    }
-
     // Role specific validation
-    if (role === 'beneficiary') {
+    if (role === 'ngo') {
       if (!organizationName || !registrationNumber) {
-        setError('Please provide organization name and registration credentials for verification.');
+        setError('Please provide organization name and registration credentials for NGO verification.');
         return;
       }
     }
@@ -70,8 +116,12 @@ const Register = () => {
       role,
       phone,
       address,
-      otp,
-      ...(role === 'beneficiary' && {
+      ...(role === 'ngo' && {
+        organizationName,
+        registrationNumber,
+        website,
+      }),
+      ...(role === 'beneficiary' && organizationName && {
         organizationName,
         registrationNumber,
         website,
@@ -81,49 +131,15 @@ const Register = () => {
     setLoading(true);
     try {
       await register(payload);
-      setSuccess('Account created successfully!');
+      setSuccess('Account created successfully! Redirecting...');
       
       setTimeout(() => {
         navigate('/dashboard');
-      }, 1500);
+      }, 1200);
     } catch (err) {
       setError(err.message || 'Registration failed. Email might already be in use.');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleSendOtp = async () => {
-    if (!email) {
-      setError('Please enter your email address first.');
-      return;
-    }
-
-    // Basic email format check
-    const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
-    if (!emailRegex.test(email)) {
-      setError('Please enter a valid email address.');
-      return;
-    }
-
-    setError('');
-    setSuccess('');
-    setSendingOtp(true);
-
-    try {
-      const response = await api('/auth/send-otp', {
-        method: 'POST',
-        body: { email },
-      });
-
-      if (response.success) {
-        setOtpSent(true);
-        setSuccess('Verification OTP code sent to your email! Please check your inbox.');
-      }
-    } catch (err) {
-      setError(err.message || 'Failed to send verification email. Please try again.');
-    } finally {
-      setSendingOtp(false);
     }
   };
 
@@ -166,7 +182,21 @@ const Register = () => {
             }}
             disabled={loading}
           >
-            <HeartHandshake size={16} /> Beneficiary / NGO
+            <HeartHandshake size={16} /> Beneficiary (Patient)
+          </button>
+          <button
+            type="button"
+            style={{
+              ...styles.tabBtn,
+              ...(role === 'ngo' ? styles.activeTab : {}),
+            }}
+            onClick={() => {
+              setRole('ngo');
+              setError('');
+            }}
+            disabled={loading}
+          >
+            <Building size={16} /> NGO / Organization
           </button>
         </div>
 
@@ -197,57 +227,70 @@ const Register = () => {
 
             <div className="form-group">
               <label htmlFor="email">Email Address</label>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <div style={{ ...styles.inputWrapper, flex: 1 }}>
-                  <Mail size={16} style={styles.inputIcon} />
-                  <input
-                    id="email"
-                    type="email"
-                    placeholder="name@domain.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="form-control"
-                    style={styles.inputWithIcon}
-                    disabled={loading || otpSent}
-                    required
-                  />
-                </div>
+              <div style={styles.inputWrapper}>
+                <Mail size={16} style={styles.inputIcon} />
+                <input
+                  id="email"
+                  type="email"
+                  placeholder="name@domain.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="form-control"
+                  style={styles.inputWithIcon}
+                  disabled={loading || otpVerified}
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* OTP Verification Box */}
+          <div style={styles.otpCard}>
+            <div style={styles.otpHeader}>
+              <KeyRound size={16} color="var(--primary)" />
+              <span style={styles.otpTitle}>Email / Identity Verification (OTP)</span>
+              {otpVerified && <span style={styles.verifiedBadge}><CheckCircle2 size={14} /> Verified</span>}
+            </div>
+
+            <div style={styles.otpRow}>
+              <input
+                type="text"
+                maxLength={6}
+                placeholder="Enter 6-digit OTP"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                style={styles.otpInput}
+                disabled={loading || otpVerified}
+              />
+
+              {!otpSent ? (
                 <button
                   type="button"
                   onClick={handleSendOtp}
-                  className="btn btn-secondary"
-                  style={{ whiteSpace: 'nowrap', padding: '0 16px', fontSize: '0.85rem', height: '42px' }}
-                  disabled={sendingOtp || !email || loading}
+                  disabled={sendingOtp || !email}
+                  className="btn btn-primary"
+                  style={styles.otpActionBtn}
                 >
-                  {sendingOtp ? 'Sending...' : otpSent ? 'Resend' : 'Send OTP'}
+                  {sendingOtp ? <RefreshCw size={14} className="animate-spin" /> : <KeyRound size={14} />}
+                  {sendingOtp ? 'Sending...' : 'Send OTP'}
                 </button>
-              </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleVerifyOtp}
+                  disabled={otpVerified || !otp}
+                  className={`btn ${otpVerified ? 'btn-secondary' : 'btn-primary'}`}
+                  style={styles.otpActionBtn}
+                >
+                  {otpVerified ? 'Verified' : 'Verify OTP'}
+                </button>
+              )}
             </div>
 
-            {otpSent && (
-              <div className="form-group animate-fade-in" style={{ gridColumn: 'span 2' }}>
-                <label htmlFor="otp" style={{ color: 'var(--primary)', fontWeight: 700 }}>
-                  Email Verification Code (OTP) *
-                </label>
-                <div style={styles.inputWrapper}>
-                  <Lock size={16} style={{ ...styles.inputIcon, color: 'var(--primary)' }} />
-                  <input
-                    id="otp"
-                    type="text"
-                    placeholder="Enter 6-digit OTP code"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    className="form-control"
-                    style={{ ...styles.inputWithIcon, borderColor: 'var(--primary)', fontWeight: 'bold', letterSpacing: '4px', textAlign: 'center' }}
-                    maxLength="6"
-                    disabled={loading}
-                    required
-                  />
-                </div>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-                  Please enter the 6-digit verification code sent to your email.
-                </p>
-              </div>
+            {otpMessage && (
+              <p style={{ fontSize: '0.82rem', color: otpVerified ? 'var(--primary)' : 'var(--text-muted)', marginTop: '4px' }}>
+                {otpMessage} {demoOtp && !otpVerified && `(Auto-filled Demo OTP: ${demoOtp})`}
+              </p>
             )}
           </div>
 
@@ -307,13 +350,13 @@ const Register = () => {
             </div>
           </div>
 
-          {/* NGO/Beneficiary Fields */}
-          {role === 'beneficiary' && (
+          {/* NGO Specific Verification Fields */}
+          {role === 'ngo' && (
             <div style={styles.ngoSection} className="animate-fade-in">
               <h3 style={styles.formSectionTitle}>NGO Verification Details</h3>
               
               <div className="form-group">
-                <label htmlFor="orgName">Organization Name</label>
+                <label htmlFor="orgName">Organization Name *</label>
                 <div style={styles.inputWrapper}>
                   <Building size={16} style={styles.inputIcon} />
                   <input
@@ -332,7 +375,7 @@ const Register = () => {
 
               <div className="grid grid-cols-2" style={{ gap: '14px' }}>
                 <div className="form-group">
-                  <label htmlFor="regNum">NGO Registration #</label>
+                  <label htmlFor="regNum">NGO Registration # *</label>
                   <div style={styles.inputWrapper}>
                     <FileText size={16} style={styles.inputIcon} />
                     <input
@@ -370,7 +413,7 @@ const Register = () => {
               <div style={styles.infoBox}>
                 <Building size={18} color="var(--primary)" />
                 <p style={styles.infoText}>
-                  NGO accounts require administrator manual verification. You will be able to browse dashboard details but cannot request medicines until verified.
+                  Verified NGO organizations can browse surplus unexpired medicine batches and submit requisition orders for healthcare clinics and community relief camps.
                 </p>
               </div>
             </div>
@@ -441,11 +484,12 @@ const styles = {
   },
   roleTabs: {
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
     background: 'var(--bg-app)',
     padding: '4px',
     borderRadius: '12px',
     border: '1px solid var(--border-color)',
+    gap: '4px',
   },
   tabBtn: {
     display: 'flex',
@@ -516,6 +560,58 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '18px',
+  },
+  otpCard: {
+    background: 'hsl(168, 50%, 98%)',
+    border: '1px solid rgba(15, 165, 124, 0.25)',
+    borderRadius: '10px',
+    padding: '14px 16px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  },
+  otpHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  },
+  otpTitle: {
+    fontSize: '0.88rem',
+    fontWeight: 700,
+    color: 'var(--text-main)',
+    flex: 1,
+  },
+  verifiedBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px',
+    background: 'var(--status-approved-bg)',
+    color: 'var(--status-approved)',
+    fontSize: '0.78rem',
+    fontWeight: 700,
+    padding: '3px 8px',
+    borderRadius: '6px',
+  },
+  otpRow: {
+    display: 'flex',
+    gap: '10px',
+  },
+  otpInput: {
+    flex: 1,
+    padding: '10px 14px',
+    border: '1px solid var(--border-color)',
+    borderRadius: '8px',
+    fontSize: '1rem',
+    letterSpacing: '2px',
+    fontWeight: 700,
+  },
+  otpActionBtn: {
+    padding: '10px 16px',
+    fontSize: '0.88rem',
+    whiteSpace: 'nowrap',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
   },
   infoBox: {
     display: 'flex',

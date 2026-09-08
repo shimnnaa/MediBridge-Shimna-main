@@ -1,10 +1,48 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Heart, ShieldCheck, ShieldAlert, Award, ArrowRight, Activity, Globe, HeartHandshake } from 'lucide-react';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Heart, ShieldCheck, ShieldAlert, Award, ArrowRight, Activity, Globe, HeartHandshake, Mail, Lock, LogIn, AlertCircle, UserCheck, PlusCircle, Search } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Home = () => {
-  const { user } = useAuth();
+  const { user, login } = useAuth();
+  const navigate = useNavigate();
+
+  // Landing page login form state
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
+
+  const handleQuickFill = (role) => {
+    if (role === 'donor') {
+      setEmail('donor@medibridge.com');
+      setPassword('donor123');
+    } else if (role === 'ngo') {
+      setEmail('ngo@medibridge.com');
+      setPassword('ngo123');
+    }
+    setLoginError('');
+  };
+
+  const handleHomeLogin = async (e) => {
+    e.preventDefault();
+    setLoginError('');
+
+    if (!email || !password) {
+      setLoginError('Please enter both email and password.');
+      return;
+    }
+
+    setLoginLoading(true);
+    try {
+      await login(email, password);
+      navigate('/dashboard');
+    } catch (err) {
+      setLoginError(err.message || 'Invalid credentials. Please verify your email and password.');
+    } finally {
+      setLoginLoading(false);
+    }
+  };
 
   return (
     <div style={styles.container} className="animate-fade-in">
@@ -22,38 +60,152 @@ const Home = () => {
           <p style={styles.heroSub}>
             MediBridge bridges the gap between generous donors with unexpired, sealed surplus medicines and verified NGOs supporting vulnerable patients in need.
           </p>
-          <div style={styles.ctaGroup}>
-            {user ? (
-              <Link to="/dashboard" className="btn btn-primary" style={styles.ctaBtn}>
-                Go to Dashboard <ArrowRight size={18} />
-              </Link>
-            ) : (
-              <>
-                <Link to="/register" className="btn btn-primary" style={styles.ctaBtn}>
-                  Get Started <ArrowRight size={18} />
-                </Link>
-                <Link to="/login" className="btn btn-secondary" style={styles.ctaBtnSec}>
-                  Login Account
-                </Link>
-              </>
-            )}
+          <div style={styles.heroHighlights}>
+            <div style={styles.highlightItem}>
+              <HeartHandshake size={18} color="var(--primary)" />
+              <span>100% Free & Transparent Redistribution</span>
+            </div>
+            <div style={styles.highlightItem}>
+              <ShieldCheck size={18} color="var(--primary)" />
+              <span>Rigorous Expiry & Safety Verification</span>
+            </div>
           </div>
         </div>
-        <div style={styles.heroGraphics}>
-          <div style={styles.graphicsCard}>
-            <div style={styles.cardHeader}>
-              <HeartHandshake size={32} color="var(--primary)" />
-              <h3>Safe Redistribution</h3>
+
+        {/* Hero Right Column: Direct User Login Form on Landing Page */}
+        <div style={styles.heroFormArea}>
+          {user ? (
+            /* Active User Welcome Card */
+            <div style={styles.loggedInCard} className="card animate-fade-in">
+              <div style={styles.loggedInHeader}>
+                <div style={styles.avatarBox}>
+                  <UserCheck size={28} color="var(--primary)" />
+                </div>
+                <div>
+                  <span style={styles.rolePill}>{user.role.toUpperCase()} ACCOUNT</span>
+                  <h3 style={styles.welcomeName}>Welcome back, {user.name}</h3>
+                  <p style={styles.userEmailText}>{user.email}</p>
+                </div>
+              </div>
+
+              <div style={styles.quickActionList}>
+                <Link to="/dashboard" className="btn btn-primary" style={styles.actionBtn}>
+                  Open Full Dashboard <ArrowRight size={16} />
+                </Link>
+
+                {user.role === 'donor' && (
+                  <Link to="/donate" className="btn btn-secondary" style={styles.actionBtn}>
+                    <PlusCircle size={16} /> Donate Medicine
+                  </Link>
+                )}
+
+                {(user.role === 'beneficiary' || user.role === 'ngo') && (
+                  <Link to="/available-medicines" className="btn btn-secondary" style={styles.actionBtn}>
+                    <Search size={16} /> Request Medicines
+                  </Link>
+                )}
+              </div>
             </div>
-            <p>Every donation undergoes administrative inspection and validation before listing.</p>
-          </div>
-          <div style={{ ...styles.graphicsCard, transform: 'translateY(30px)' }}>
-            <div style={styles.cardHeader}>
-              <ShieldCheck size={32} color="var(--secondary)" />
-              <h3>Verified Beneficiaries</h3>
+          ) : (
+            /* Normal User Login Form Embedded on Landing Page */
+            <div id="login-section" style={styles.loginCard} className="card animate-fade-in">
+              <div style={styles.loginHeader}>
+                <div style={styles.loginIconWrap}>
+                  <LogIn size={22} color="var(--primary)" />
+                </div>
+                <div>
+                  <h3 style={styles.loginCardTitle}>User Account Login</h3>
+                  <p style={styles.loginCardSub}>For Donors and Beneficiary NGOs</p>
+                </div>
+              </div>
+
+              {/* Quick Fill Demo Role Switchers */}
+              <div style={styles.quickFillWrap}>
+                <span style={styles.quickFillLabel}>Demo Quick-Fill:</span>
+                <div style={styles.quickFillBtns}>
+                  <button
+                    type="button"
+                    onClick={() => handleQuickFill('donor')}
+                    style={styles.roleFillBtn}
+                  >
+                    🩺 Donor
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleQuickFill('ngo')}
+                    style={styles.roleFillBtn}
+                  >
+                    🏥 NGO
+                  </button>
+                </div>
+              </div>
+
+              {loginError && (
+                <div style={styles.errorAlert}>
+                  <AlertCircle size={16} style={{ flexShrink: 0 }} />
+                  <span>{loginError}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleHomeLogin} style={styles.homeLoginForm}>
+                <div className="form-group" style={{ marginBottom: '12px' }}>
+                  <label htmlFor="home-email" style={styles.inputLabel}>Email Address</label>
+                  <div style={styles.inputWrap}>
+                    <Mail size={16} style={styles.fieldIcon} />
+                    <input
+                      id="home-email"
+                      type="email"
+                      placeholder="donor@medibridge.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="form-control"
+                      style={styles.formInput}
+                      disabled={loginLoading}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group" style={{ marginBottom: '16px' }}>
+                  <label htmlFor="home-password" style={styles.inputLabel}>Password</label>
+                  <div style={styles.inputWrap}>
+                    <Lock size={16} style={styles.fieldIcon} />
+                    <input
+                      id="home-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="form-control"
+                      style={styles.formInput}
+                      disabled={loginLoading}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  style={styles.submitBtn}
+                  disabled={loginLoading}
+                >
+                  {loginLoading ? 'Signing in...' : (
+                    <>
+                      <LogIn size={18} /> Sign In to MediBridge
+                    </>
+                  )}
+                </button>
+              </form>
+
+              <div style={styles.formFooter}>
+                <span>Don't have an account yet?</span>
+                <Link to="/register" style={styles.registerLink}>
+                  Register Securely <ArrowRight size={14} />
+                </Link>
+              </div>
             </div>
-            <p>Only verified NGOs and social welfare groups can claim medicines on our platform.</p>
-          </div>
+          )}
         </div>
       </header>
 
@@ -160,7 +312,7 @@ const styles = {
   },
   hero: {
     display: 'grid',
-    gridTemplateColumns: '1.2fr 0.8fr',
+    gridTemplateColumns: '1.1fr 0.9fr',
     gap: '40px',
     alignItems: 'center',
     paddingTop: '20px',
@@ -169,7 +321,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'flex-start',
-    gap: '24px',
+    gap: '20px',
   },
   badge: {
     display: 'inline-flex',
@@ -184,7 +336,7 @@ const styles = {
     color: 'var(--primary)',
   },
   heroTitle: {
-    fontSize: '3.2rem',
+    fontSize: '3rem',
     fontWeight: 800,
     lineHeight: '1.15',
     letterSpacing: '-1.5px',
@@ -196,45 +348,229 @@ const styles = {
     WebkitTextFillColor: 'transparent',
   },
   heroSub: {
-    fontSize: '1.15rem',
+    fontSize: '1.1rem',
     color: 'var(--text-muted)',
     lineHeight: '1.6',
-    maxWidth: '560px',
+    maxWidth: '540px',
   },
-  ctaGroup: {
-    display: 'flex',
-    gap: '16px',
-    flexWrap: 'wrap',
-  },
-  ctaBtn: {
-    padding: '14px 28px',
-    fontSize: '1.05rem',
-    boxShadow: '0 8px 20px rgba(15, 165, 124, 0.25)',
-  },
-  ctaBtnSec: {
-    padding: '14px 28px',
-    fontSize: '1.05rem',
-  },
-  heroGraphics: {
+  heroHighlights: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '24px',
-    position: 'relative',
+    gap: '10px',
+    marginTop: '4px',
   },
-  graphicsCard: {
-    background: '#fff',
-    border: '1px solid var(--border-color)',
-    padding: '24px',
-    borderRadius: '20px',
-    boxShadow: 'var(--shadow-lg)',
-    maxWidth: '340px',
-    marginLeft: 'auto',
-  },
-  cardHeader: {
+  highlightItem: {
     display: 'flex',
     alignItems: 'center',
-    gap: '12px',
-    marginBottom: '10px',
+    gap: '10px',
+    fontSize: '0.92rem',
+    fontWeight: 600,
+    color: 'var(--text-main)',
+  },
+  heroFormArea: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+  },
+  loginCard: {
+    width: '100%',
+    maxWidth: '430px',
+    background: '#ffffff',
+    border: '1px solid rgba(15, 165, 124, 0.2)',
+    borderRadius: '20px',
+    padding: '30px 28px',
+    boxShadow: '0 20px 40px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(15, 165, 124, 0.08)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '18px',
+  },
+  loginHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '14px',
+  },
+  loginIconWrap: {
+    width: '46px',
+    height: '46px',
+    borderRadius: '12px',
+    background: 'var(--primary-light)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  loginCardTitle: {
+    fontSize: '1.35rem',
+    fontWeight: 800,
+    color: 'hsl(210, 24%, 12%)',
+    margin: 0,
+  },
+  loginCardSub: {
+    fontSize: '0.82rem',
+    color: 'var(--text-muted)',
+    margin: 0,
+  },
+  quickFillWrap: {
+    background: 'var(--bg-app)',
+    border: '1px dashed var(--border-color)',
+    borderRadius: '10px',
+    padding: '10px 12px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '8px',
+  },
+  quickFillLabel: {
+    fontSize: '0.76rem',
+    fontWeight: 700,
+    color: 'var(--text-muted)',
+  },
+  quickFillBtns: {
+    display: 'flex',
+    gap: '8px',
+  },
+  roleFillBtn: {
+    background: '#fff',
+    border: '1px solid var(--border-color)',
+    padding: '4px 10px',
+    borderRadius: '6px',
+    fontSize: '0.78rem',
+    fontWeight: 700,
+    color: 'var(--text-main)',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+  },
+  errorAlert: {
+    background: 'var(--status-rejected-bg)',
+    color: 'var(--status-rejected)',
+    border: '1px solid rgba(220, 53, 69, 0.2)',
+    padding: '10px 14px',
+    borderRadius: '8px',
+    fontSize: '0.84rem',
+    fontWeight: 600,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  },
+  homeLoginForm: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  inputLabel: {
+    fontSize: '0.82rem',
+    fontWeight: 700,
+    color: 'var(--text-main)',
+    marginBottom: '4px',
+    display: 'block',
+  },
+  inputWrap: {
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+  },
+  fieldIcon: {
+    position: 'absolute',
+    left: '12px',
+    color: 'var(--text-muted)',
+  },
+  formInput: {
+    paddingLeft: '38px',
+    width: '100%',
+    height: '42px',
+    fontSize: '0.92rem',
+  },
+  submitBtn: {
+    width: '100%',
+    padding: '12px',
+    fontSize: '0.96rem',
+    fontWeight: 700,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    marginTop: '4px',
+  },
+  formFooter: {
+    textAlign: 'center',
+    fontSize: '0.85rem',
+    color: 'var(--text-muted)',
+    borderTop: '1px solid var(--border-color)',
+    paddingTop: '14px',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: '6px',
+  },
+  registerLink: {
+    color: 'var(--primary)',
+    fontWeight: 700,
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px',
+  },
+  loggedInCard: {
+    width: '100%',
+    maxWidth: '430px',
+    background: '#ffffff',
+    border: '1px solid rgba(15, 165, 124, 0.25)',
+    borderRadius: '20px',
+    padding: '32px 28px',
+    boxShadow: '0 20px 40px rgba(15, 23, 42, 0.08)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '22px',
+  },
+  loggedInHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px',
+  },
+  avatarBox: {
+    width: '54px',
+    height: '54px',
+    borderRadius: '16px',
+    background: 'var(--primary-light)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  rolePill: {
+    display: 'inline-block',
+    fontSize: '0.72rem',
+    fontWeight: 800,
+    color: 'var(--primary)',
+    background: 'var(--primary-light)',
+    padding: '2px 8px',
+    borderRadius: '6px',
+    letterSpacing: '0.5px',
+    marginBottom: '4px',
+  },
+  welcomeName: {
+    fontSize: '1.25rem',
+    fontWeight: 800,
+    color: 'hsl(210, 24%, 12%)',
+    margin: 0,
+  },
+  userEmailText: {
+    fontSize: '0.82rem',
+    color: 'var(--text-muted)',
+    margin: 0,
+  },
+  quickActionList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+  },
+  actionBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    padding: '12px',
+    fontWeight: 700,
+    fontSize: '0.92rem',
   },
   statsSection: {
     background: 'linear-gradient(135deg, hsl(210, 30%, 12%), hsl(210, 30%, 8%))',

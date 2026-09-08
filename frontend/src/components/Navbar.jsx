@@ -1,28 +1,35 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Heart, LogOut, User, PlusCircle, Search, ClipboardList, ShieldAlert, Users } from 'lucide-react';
+import { Heart, LogOut, User, PlusCircle, Search, ClipboardList, ShieldAlert, Users, Menu, X, FileText } from 'lucide-react';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleLogout = () => {
+    setMobileMenuOpen(false);
     logout();
     navigate('/login');
+  };
+
+  const closeMenu = () => {
+    setMobileMenuOpen(false);
   };
 
   return (
     <nav style={styles.nav}>
       <div style={styles.container}>
-        <Link to="/" style={styles.logo}>
+        <Link to="/" style={styles.logo} onClick={closeMenu}>
           <div style={styles.logoIcon}>
             <Heart size={20} fill="currentColor" />
           </div>
           <span style={styles.logoText}>Medi<span style={styles.logoAccent}>Bridge</span></span>
         </Link>
 
-        <div style={styles.navLinks}>
+        {/* Desktop Links */}
+        <div style={styles.desktopNavLinks} className="desktop-only-nav">
           {user ? (
             <>
               {/* Common link for all authenticated users to go to dashboard */}
@@ -40,8 +47,8 @@ const Navbar = () => {
                 </>
               )}
 
-              {/* Beneficiary specific links */}
-              {user.role === 'beneficiary' && (
+              {/* Beneficiary/NGO specific links */}
+              {(user.role === 'beneficiary' || user.role === 'ngo') && (
                 <>
                   <Link to="/available-medicines" style={styles.link}>
                     <Search size={16} /> Request Medicine
@@ -65,7 +72,7 @@ const Navbar = () => {
                     <Users size={16} /> Users
                   </Link>
                   <Link to="/admin/reports" style={styles.link}>
-                    Report
+                    <FileText size={16} /> Reports
                   </Link>
                 </>
               )}
@@ -88,23 +95,100 @@ const Navbar = () => {
             </>
           )}
         </div>
+
+        {/* Mobile Hamburger Toggle Button */}
+        <button
+          onClick={() => setMobileMenuOpen(prev => !prev)}
+          style={styles.mobileMenuToggle}
+          aria-label="Toggle navigation menu"
+        >
+          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
       </div>
+
+      {/* Mobile Drawer Dropdown */}
+      {mobileMenuOpen && (
+        <div style={styles.mobileDrawer} className="animate-fade-in">
+          {user ? (
+            <div style={styles.mobileLinksList}>
+              <Link to="/dashboard" style={styles.mobileLink} onClick={closeMenu}>
+                Dashboard
+              </Link>
+
+              {user.role === 'donor' && (
+                <>
+                  <Link to="/donate" style={styles.mobileLink} onClick={closeMenu}>
+                    <PlusCircle size={16} /> Donate Medicine
+                  </Link>
+                  <Link to="/my-donations" style={styles.mobileLink} onClick={closeMenu}>
+                    <ClipboardList size={16} /> My Donations
+                  </Link>
+                </>
+              )}
+
+              {(user.role === 'beneficiary' || user.role === 'ngo') && (
+                <>
+                  <Link to="/available-medicines" style={styles.mobileLink} onClick={closeMenu}>
+                    <Search size={16} /> Request Medicine
+                  </Link>
+                  <Link to="/my-requests" style={styles.mobileLink} onClick={closeMenu}>
+                    <ClipboardList size={16} /> My Requests
+                  </Link>
+                </>
+              )}
+
+              {user.role === 'admin' && (
+                <>
+                  <Link to="/admin/verify-donations" style={styles.mobileLink} onClick={closeMenu}>
+                    <ShieldAlert size={16} /> Verify Donations
+                  </Link>
+                  <Link to="/admin/verify-requests" style={styles.mobileLink} onClick={closeMenu}>
+                    <ClipboardList size={16} /> Requests
+                  </Link>
+                  <Link to="/admin/users" style={styles.mobileLink} onClick={closeMenu}>
+                    <Users size={16} /> Manage Users
+                  </Link>
+                  <Link to="/admin/reports" style={styles.mobileLink} onClick={closeMenu}>
+                    <FileText size={16} /> Reports & Audits
+                  </Link>
+                </>
+              )}
+
+              <Link to="/profile" style={styles.mobileProfileLink} onClick={closeMenu}>
+                <User size={16} />
+                <span>{user.name || 'Account'} ({(user.role || 'user').toUpperCase()})</span>
+              </Link>
+
+              <button onClick={handleLogout} style={styles.mobileLogoutBtn} className="btn btn-danger">
+                <LogOut size={16} />
+                <span>Logout</span>
+              </button>
+            </div>
+          ) : (
+            <div style={styles.mobileLinksList}>
+              <Link to="/login" style={styles.mobileLink} onClick={closeMenu}>Login</Link>
+              <Link to="/register" className="btn btn-primary" onClick={closeMenu}>Register Securely</Link>
+            </div>
+          )}
+        </div>
+      )}
     </nav>
   );
 };
 
 const styles = {
   nav: {
-    background: 'rgba(255, 255, 255, 0.85)',
+    background: 'rgba(255, 255, 255, 0.9)',
     backdropFilter: 'blur(10px)',
     borderBottom: '1px solid var(--border-color)',
     position: 'sticky',
     top: 0,
     zIndex: 100,
     padding: '0 24px',
-    height: '70px',
+    minHeight: '70px',
     display: 'flex',
-    alignItems: 'center',
+    flexDirection: 'column',
+    justifyContent: 'center',
   },
   container: {
     maxWidth: '1200px',
@@ -113,6 +197,7 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    height: '70px',
   },
   logo: {
     display: 'flex',
@@ -140,26 +225,26 @@ const styles = {
   logoAccent: {
     color: 'var(--primary)',
   },
-  navLinks: {
+  desktopNavLinks: {
     display: 'flex',
     alignItems: 'center',
-    gap: '20px',
+    gap: '16px',
   },
   link: {
     display: 'flex',
     alignItems: 'center',
     gap: '6px',
-    fontSize: '0.95rem',
+    fontSize: '0.92rem',
     fontWeight: 600,
     color: 'var(--text-main)',
-    padding: '6px 12px',
+    padding: '6px 10px',
     borderRadius: '8px',
   },
   profileLink: {
     display: 'flex',
     alignItems: 'center',
     gap: '6px',
-    fontSize: '0.95rem',
+    fontSize: '0.92rem',
     fontWeight: 600,
     color: 'var(--primary)',
     background: 'var(--primary-light)',
@@ -177,7 +262,7 @@ const styles = {
     alignItems: 'center',
     gap: '6px',
     padding: '8px 14px',
-    fontSize: '0.9rem',
+    fontSize: '0.88rem',
     background: 'transparent',
     border: '1px solid var(--border-color)',
     color: 'var(--text-muted)',
@@ -194,6 +279,69 @@ const styles = {
     padding: '10px 20px',
     fontSize: '0.95rem',
   },
+  mobileMenuToggle: {
+    display: 'none',
+    background: 'transparent',
+    border: 'none',
+    color: 'var(--text-main)',
+    cursor: 'pointer',
+    padding: '6px',
+    borderRadius: '8px',
+  },
+  mobileDrawer: {
+    background: '#fff',
+    borderTop: '1px solid var(--border-color)',
+    padding: '16px 0',
+  },
+  mobileLinksList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+  },
+  mobileLink: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontSize: '0.95rem',
+    fontWeight: 600,
+    color: 'var(--text-main)',
+    padding: '8px 12px',
+    borderRadius: '8px',
+  },
+  mobileProfileLink: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontSize: '0.95rem',
+    fontWeight: 600,
+    color: 'var(--primary)',
+    background: 'var(--primary-light)',
+    padding: '10px 12px',
+    borderRadius: '8px',
+    marginTop: '6px',
+  },
+  mobileLogoutBtn: {
+    width: '100%',
+    padding: '10px',
+    marginTop: '6px',
+  },
 };
 
+// Global mobile styles
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.innerHTML = `
+    @media (max-width: 868px) {
+      .desktop-only-nav {
+        display: none !important;
+      }
+      button[aria-label="Toggle navigation menu"] {
+        display: block !important;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 export default Navbar;
+

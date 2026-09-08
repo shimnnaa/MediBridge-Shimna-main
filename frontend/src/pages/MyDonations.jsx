@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../utils/api';
-import { ArrowLeft, Clock, Calendar, HelpCircle, Heart } from 'lucide-react';
+import { ArrowLeft, Heart } from 'lucide-react';
 
 const MyDonations = () => {
   const [donations, setDonations] = useState([]);
@@ -74,8 +74,8 @@ const MyDonations = () => {
                       <td>{med.originalQuantity}</td>
                       <td>{med.quantity}</td>
                       <td>
-                        <span className={`status-badge ${med.status}`}>
-                          {med.status.toUpperCase()}
+                        <span className={`status-badge ${med.status || 'pending'}`}>
+                          {(med.status || 'pending').toUpperCase()}
                         </span>
                       </td>
                       <td style={styles.remarksCell}>

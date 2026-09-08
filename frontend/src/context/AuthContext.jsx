@@ -14,8 +14,27 @@ export const AuthProvider = ({ children }) => {
 
     if (storedUser && token) {
       setUser(JSON.parse(storedUser));
+
+      // Asynchronously refresh user profile from backend to sync latest status/approvals
+      api('/auth/profile')
+        .then((res) => {
+          if (res && res.success && res.data) {
+            localStorage.setItem('user', JSON.stringify(res.data));
+            setUser(res.data);
+          }
+        })
+        .catch((err) => {
+          console.warn('Could not refresh user profile:', err);
+        });
     }
     setLoading(false);
+
+    const handleAutoLogout = () => {
+      setUser(null);
+    };
+
+    window.addEventListener('medibridge:logout', handleAutoLogout);
+    return () => window.removeEventListener('medibridge:logout', handleAutoLogout);
   }, []);
 
   const login = async (email, password) => {
@@ -75,35 +94,27 @@ export const AuthProvider = ({ children }) => {
   };
 
   const updateProfile = async (profileData) => {
-    try {
-      const response = await api('/auth/profile', {
-        method: 'PUT',
-        body: profileData,
-      });
+    const response = await api('/auth/profile', {
+      method: 'PUT',
+      body: profileData,
+    });
 
-      if (response.success && response.data) {
-        // Retain the token, only update user object details
-        localStorage.setItem('user', JSON.stringify(response.data));
-        setUser(response.data);
-        return response;
-      } else {
-        throw new Error('Profile update failed');
-      }
-    } catch (error) {
-      throw error;
+    if (response.success && response.data) {
+      // Retain the token, only update user object details
+      localStorage.setItem('user', JSON.stringify(response.data));
+      setUser(response.data);
+      return response;
+    } else {
+      throw new Error('Profile update failed');
     }
   };
 
   const updatePassword = async (currentPassword, newPassword) => {
-    try {
-      const response = await api('/auth/update-password', {
-        method: 'PUT',
-        body: { currentPassword, newPassword },
-      });
-      return response;
-    } catch (error) {
-      throw error;
-    }
+    const response = await api('/auth/update-password', {
+      method: 'PUT',
+      body: { currentPassword, newPassword },
+    });
+    return response;
   };
 
   return (

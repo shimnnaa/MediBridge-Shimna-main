@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ShieldCheck, LogIn, Mail, Lock } from 'lucide-react';
 
@@ -11,37 +11,6 @@ const Login = () => {
   
   const { login } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-
-  useEffect(() => {
-    if (location.hash === '#admin') {
-      setEmail('admin@medibridge.com');
-      setPassword('admin123');
-
-      // Clear the hash from URL immediately to prevent back-button redirect loops
-      navigate('/login', { replace: true });
-
-      const autoLogin = async () => {
-        setLoading(true);
-        setError('');
-        try {
-          await login('admin@medibridge.com', 'admin123');
-          navigate('/dashboard');
-        } catch (err) {
-          setError(err.message || 'Invalid email or password. Please try again.');
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      // 600ms delay so the user can see the credentials filled in before logging in
-      const timer = setTimeout(() => {
-        autoLogin();
-      }, 600);
-
-      return () => clearTimeout(timer);
-    }
-  }, [location.hash, login, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -222,6 +191,20 @@ const styles = {
   registerLink: {
     color: 'var(--primary)',
     fontWeight: 700,
+  },
+  adminDivider: {
+    marginTop: '12px',
+    paddingTop: '12px',
+    borderTop: '1px dashed var(--border-color)',
+  },
+  adminLink: {
+    color: 'var(--text-muted)',
+    fontSize: '0.82rem',
+    fontWeight: 600,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '4px',
   },
 };
 

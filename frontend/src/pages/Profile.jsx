@@ -1,20 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { ArrowLeft, User, Phone, MapPin, Building, FileText, Globe, Lock, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, User, Phone, MapPin, Building, FileText, Globe, Lock, ShieldCheck, AlertCircle } from 'lucide-react';
+
+// Phone format validator: 10 digits with optional country code
+const validatePhoneNumber = (val) => {
+  if (!val || !val.trim()) return { isValid: false, message: 'Phone number is required.' };
+  const cleaned = val.trim().replace(/[\s\-()]/g, '');
+  if (!/^[0-9+]+$/.test(cleaned)) {
+    return { isValid: false, message: 'Phone number must only contain digits.' };
+  }
+  if (!/^(?:\+?[1-9]\d{0,3})?[0-9]{10}$/.test(cleaned)) {
+    return { isValid: false, message: 'Must be a valid 10-digit phone number (e.g. 9876543210 or +91 9876543210).' };
+  }
+  return { isValid: true, message: 'Valid 10-digit phone number format.' };
+};
 
 const Profile = () => {
   const { user, updateProfile, updatePassword } = useAuth();
 
-  if (!user) return null;
-
   // Profile fields state
-  const [name, setName] = useState(user.name || '');
-  const [phone, setPhone] = useState(user.phone || '');
-  const [address, setAddress] = useState(user.address || '');
-  const [organizationName, setOrganizationName] = useState(user.organizationName || '');
-  const [registrationNumber, setRegistrationNumber] = useState(user.registrationNumber || '');
-  const [website, setWebsite] = useState(user.website || '');
+  const [name, setName] = useState(user?.name || '');
+  const [phone, setPhone] = useState(user?.phone || '');
+  const [address, setAddress] = useState(user?.address || '');
+  const [organizationName, setOrganizationName] = useState(user?.organizationName || '');
+  const [registrationNumber, setRegistrationNumber] = useState(user?.registrationNumber || '');
+  const [website, setWebsite] = useState(user?.website || '');
 
   // Password fields state
   const [currentPassword, setCurrentPassword] = useState('');
@@ -30,6 +41,19 @@ const Profile = () => {
   const [updatingProfile, setUpdatingProfile] = useState(false);
   const [updatingPassword, setUpdatingPassword] = useState(false);
 
+  useEffect(() => {
+    if (user) {
+      setName(user.name || '');
+      setPhone(user.phone || '');
+      setAddress(user.address || '');
+      setOrganizationName(user.organizationName || '');
+      setRegistrationNumber(user.registrationNumber || '');
+      setWebsite(user.website || '');
+    }
+  }, [user]);
+
+  if (!user) return null;
+
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
     setProfileSuccess('');
@@ -40,13 +64,19 @@ const Profile = () => {
       return;
     }
 
+    const phoneValidation = validatePhoneNumber(phone);
+    if (!phoneValidation.isValid) {
+      setProfileError(phoneValidation.message);
+      return;
+    }
+
     setUpdatingProfile(true);
     try {
       const payload = {
         name,
         phone,
         address,
-        ...(user.role === 'beneficiary' && {
+        ...((user.role === 'beneficiary' || user.role === 'ngo') && {
           organizationName,
           registrationNumber,
           website,
@@ -155,20 +185,38 @@ const Profile = () => {
               </div>
 
               <div className="form-group">
-                <label htmlFor="phone">Phone Number</label>
+                <label htmlFor="phone">Phone Number (10 digits)</label>
                 <div style={styles.inputWrapper}>
                   <Phone size={16} style={styles.inputIcon} />
                   <input
                     id="phone"
                     type="tel"
+                    placeholder="e.g. 9876543210"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     className="form-control"
-                    style={styles.inputWithIcon}
+                    style={{
+                      ...styles.inputWithIcon,
+                      borderColor: phone ? (validatePhoneNumber(phone).isValid ? 'var(--status-approved)' : 'var(--status-rejected)') : undefined,
+                    }}
                     disabled={updatingProfile}
                     required
                   />
                 </div>
+                {phone && (
+                  <div style={{
+                    fontSize: '0.78rem',
+                    marginTop: '5px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    color: validatePhoneNumber(phone).isValid ? 'var(--status-approved)' : 'var(--status-rejected)',
+                    fontWeight: 600,
+                  }}>
+                    {validatePhoneNumber(phone).isValid ? <ShieldCheck size={13} /> : <AlertCircle size={13} />}
+                    <span>{validatePhoneNumber(phone).message}</span>
+                  </div>
+                )}
               </div>
 
               <div className="form-group">
@@ -188,7 +236,7 @@ const Profile = () => {
                 </div>
               </div>
 
-              {user.role === 'beneficiary' && (
+              {(user.role === 'beneficiary' || user.role === 'ngo') && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', borderTop: '1px solid var(--border-color)', paddingTop: '18px', marginTop: '10px' }}>
                   <h4 style={{ fontSize: '0.95rem', color: 'var(--primary)' }}>Organization Details</h4>
                   
