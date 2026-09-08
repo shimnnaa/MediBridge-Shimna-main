@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, FileText, Download, ShieldCheck, AlertCircle } from 'lucide-react';
+import { API_URL } from '../utils/api';
 
 const AdminReports = () => {
   const [downloading, setDownloading] = useState({ donations: false, requests: false });
@@ -12,7 +13,7 @@ const AdminReports = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/admin/reports/${type}`, {
+      const response = await fetch(`${API_URL}/admin/reports/${type}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../utils/api';
-import { ArrowLeft, Clock, Calendar, Check, X, ShieldAlert, AlertCircle, FileText } from 'lucide-react';
+import { ArrowLeft, Check, X, ShieldAlert } from 'lucide-react';
 
 const AdminVerifyDonations = () => {
   const [donations, setDonations] = useState([]);

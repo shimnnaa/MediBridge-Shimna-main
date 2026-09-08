@@ -1,17 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../utils/api';
-import { ArrowLeft, Users, User, ShieldCheck, Mail, Phone, MapPin, Building, Globe, Check, X, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, Users, Phone, MapPin, Building, Globe, Check, X, ShieldAlert, Edit, ShieldCheck, AlertCircle } from 'lucide-react';
+
+// Phone format validator: 10 digits with optional +country code
+const validatePhoneNumber = (val) => {
+  if (!val || !val.trim()) return { isValid: false, message: 'Phone number is required.' };
+  const cleaned = val.trim().replace(/[\s\-()]/g, '');
+  if (!/^\+?[0-9]+$/.test(cleaned)) {
+    return { isValid: false, message: 'Phone number must only contain digits.' };
+  }
+  if (!/^(?:\+[1-9]\d{0,3})?[0-9]{10}$/.test(cleaned)) {
+    return { isValid: false, message: 'Must be a valid 10-digit phone number (e.g. 9876543210 or +91 9876543210).' };
+  }
+  return { isValid: true, message: 'Valid 10-digit phone number format.' };
+};
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [roleFilter, setRoleFilter] = useState(''); // '' for all, 'donor', 'beneficiary'
+  const [roleFilter, setRoleFilter] = useState(''); // '' for all, 'donor', 'beneficiary', 'admin'
   
   // Selection and status change states
   const [selectedUser, setSelectedUser] = useState(null);
   const [actionStatus, setActionStatus] = useState(''); // 'approved', 'rejected'
   
+  // Edit user states
+  const [editingUser, setEditingUser] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    phone: '',
+    address: '',
+    organizationName: '',
+    registrationNumber: '',
+    website: '',
+  });
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [editError, setEditError] = useState('');
+  const [editSuccess, setEditSuccess] = useState('');
+
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -44,6 +71,63 @@ const AdminUsers = () => {
 
   const handleCloseModal = () => {
     setSelectedUser(null);
+  };
+
+  const handleOpenEditModal = (userItem) => {
+    setEditingUser(userItem);
+    setEditForm({
+      name: userItem.name || '',
+      phone: userItem.phone || '',
+      address: userItem.address || '',
+      organizationName: userItem.organizationName || '',
+      registrationNumber: userItem.registrationNumber || '',
+      website: userItem.website || '',
+    });
+    setEditError('');
+    setEditSuccess('');
+  };
+
+  const handleCloseEditModal = () => {
+    setEditingUser(null);
+    setEditError('');
+    setEditSuccess('');
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    setEditError('');
+    setEditSuccess('');
+
+    if (!editForm.name || !editForm.name.trim()) {
+      setEditError('Name is required.');
+      return;
+    }
+
+    const phoneValidation = validatePhoneNumber(editForm.phone);
+    if (!phoneValidation.isValid) {
+      setEditError(phoneValidation.message);
+      return;
+    }
+
+    setEditSubmitting(true);
+    try {
+      const response = await api(`/admin/users/${editingUser._id}`, {
+        method: 'PUT',
+        body: editForm,
+      });
+
+      if (response.success) {
+        setEditSuccess('User details and phone number updated successfully!');
+        fetchUsers(roleFilter);
+        setTimeout(() => {
+          handleCloseEditModal();
+        }, 1200);
+      }
+    } catch (err) {
+      setEditError(err.message || 'Failed to update user details.');
+    } finally {
+      setEditSubmitting(false);
+    }
   };
 
   const handleStatusSubmit = async (e) => {
@@ -137,14 +221,16 @@ const AdminUsers = () => {
                 </thead>
                 <tbody>
                   {users.map((member) => {
-                    const isNgo = member.role === 'beneficiary';
-                    const isPendingNgo = isNgo && member.status === 'pending';
+                    const role = member.role || 'donor';
+                    const status = member.status || 'active';
+                    const isNgo = role === 'beneficiary' || role === 'ngo';
+                    const isPendingNgo = isNgo && status === 'pending';
 
                     return (
                       <tr key={member._id}>
                         <td>
-                          <div style={styles.memberName}>{member.name}</div>
-                          <span style={styles.detailText}>{member.email}</span>
+                          <div style={styles.memberName}>{member.name || 'Anonymous User'}</div>
+                          <span style={styles.detailText}>{member.email || 'N/A'}</span>
                         </td>
                         <td>
                           <span style={{
@@ -152,19 +238,19 @@ const AdminUsers = () => {
                             background: isNgo ? 'var(--primary-light)' : 'rgba(0,180,216,0.1)',
                             color: isNgo ? 'var(--primary)' : 'var(--secondary)',
                           }}>
-                            {member.role.toUpperCase()}
+                            {role.toUpperCase()}
                           </span>
                         </td>
                         <td>
-                          <span className={`status-badge ${member.status}`}>
-                            {member.status.toUpperCase()}
+                          <span className={`status-badge ${status}`}>
+                            {status.toUpperCase()}
                           </span>
                         </td>
                         <td>
                           {isNgo ? (
                             <div style={styles.ngoDetailsColumn}>
-                              <div style={styles.orgHeader}><Building size={12} /> <strong>{member.organizationName}</strong></div>
-                              <div style={styles.detailText}>Reg: {member.registrationNumber}</div>
+                              <div style={styles.orgHeader}><Building size={12} /> <strong>{member.organizationName || 'Registered NGO'}</strong></div>
+                              <div style={styles.detailText}>Reg: {member.registrationNumber || 'Pending'}</div>
                               {member.website && (
                                 <div style={styles.detailText}>
                                   <Globe size={10} style={{ display: 'inline', marginRight: '4px' }} />
@@ -173,13 +259,13 @@ const AdminUsers = () => {
                               )}
                             </div>
                           ) : (
-                            <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>N/A</span>
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>N/A (Individual Donor)</span>
                           )}
                         </td>
                         <td>
                           <div style={{ fontSize: '0.8rem' }}>
-                            <div><Phone size={10} style={{ display: 'inline', marginRight: '4px' }} /> {member.phone}</div>
-                            <div><MapPin size={10} style={{ display: 'inline', marginRight: '4px' }} /> {member.address}</div>
+                            <div><Phone size={10} style={{ display: 'inline', marginRight: '4px' }} /> {member.phone || 'N/A'}</div>
+                            <div><MapPin size={10} style={{ display: 'inline', marginRight: '4px' }} /> {member.address || 'N/A'}</div>
                           </div>
                         </td>
                         <td>
@@ -233,7 +319,7 @@ const AdminUsers = () => {
                 borderColor: actionStatus === 'approved' ? 'rgba(40,167,69,0.2)' : 'rgba(220,53,69,0.2)',
               }}>
                 <ShieldAlert size={18} />
-                <span>You are marking this NGO registration as <strong>{actionStatus.toUpperCase()}</strong>.</span>
+                <span>You are marking this NGO registration as <strong>{(actionStatus || '').toUpperCase()}</strong>.</span>
               </div>
 
               <div style={styles.reviewSummaryBox}>

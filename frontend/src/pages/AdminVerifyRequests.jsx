@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../utils/api';
-import { ArrowLeft, Clock, Calendar, Check, X, ShieldAlert, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Check, X, ShieldAlert, AlertCircle } from 'lucide-react';
 
 const AdminVerifyRequests = () => {
   const [requests, setRequests] = useState([]);
@@ -107,7 +107,7 @@ const AdminVerifyRequests = () => {
                     <th>Medicine Details</th>
                     <th>Available Stock</th>
                     <th>Requested Qty</th>
-                    <th>Requester (NGO)</th>
+                    <th>Requester (Beneficiary/NGO)</th>
                     <th>Requested Date</th>
                     <th>Reason for Request</th>
                     <th>Actions</th>
@@ -124,6 +124,11 @@ const AdminVerifyRequests = () => {
                         <td style={styles.medCell}>
                           <div style={styles.medName}>{medicine.name || 'Deleted Medicine'}</div>
                           <span style={styles.detailText}>Batch: <code>{medicine.batchNumber}</code> | Expiry: {medicine.expiryDate ? new Date(medicine.expiryDate).toLocaleDateString() : 'N/A'}</span>
+                          {medicine.donor && (
+                            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '3px' }}>
+                              Donor: <strong>{medicine.donor.name || 'N/A'}</strong> {medicine.donor.phone ? `(${medicine.donor.phone})` : ''}
+                            </div>
+                          )}
                         </td>
                         <td>
                           <span style={isStockInsufficient ? { color: 'var(--status-rejected)', fontWeight: 'bold' } : {}}>
@@ -138,7 +143,7 @@ const AdminVerifyRequests = () => {
                           <div style={styles.ngoName}>{requester.organizationName || requester.name}</div>
                           <span style={styles.detailText}>Reg: {requester.registrationNumber || 'Individual'}</span>
                         </td>
-                        <td>{new Date(reqItem.requestDate).toLocaleDateString()}</td>
+                        <td>{new Date(reqItem.requestDate || reqItem.createdAt).toLocaleDateString()}</td>
                         <td style={styles.reasonCell}>{reqItem.reason}</td>
                         <td>
                           <div style={styles.actionBtnGroup}>
@@ -195,7 +200,7 @@ const AdminVerifyRequests = () => {
                 <div style={styles.stockNotice}>
                   <AlertCircle size={16} color="var(--primary)" />
                   <p style={{ fontSize: '0.82rem', color: 'hsl(162, 80%, 20%)' }}>
-                    Confirming approval will automatically decrement <strong>{selectedReq.quantity}</strong> units from the stock of <strong>{selectedReq.medicine?.name}</strong>.
+                    Confirming approval will automatically decrement <strong>{selectedReq.quantity}</strong> units from the stock of <strong>{selectedReq.medicine?.name}</strong> and make donor contact details visible to the beneficiary NGO.
                   </p>
                 </div>
               )}

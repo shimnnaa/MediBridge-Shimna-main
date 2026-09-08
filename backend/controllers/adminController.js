@@ -10,8 +10,8 @@ const getDashboardStats = async (req, res) => {
     // Count users
     const totalUsers = await User.countDocuments();
     const donorCount = await User.countDocuments({ role: 'donor' });
-    const beneficiaryCount = await User.countDocuments({ role: 'beneficiary' });
-    const pendingBeneficiaries = await User.countDocuments({ role: 'beneficiary', status: 'pending' });
+    const beneficiaryCount = (await User.countDocuments({ role: 'beneficiary' })) + (await User.countDocuments({ role: 'ngo' }));
+    const pendingBeneficiaries = (await User.countDocuments({ role: 'beneficiary', status: 'pending' })) + (await User.countDocuments({ role: 'ngo', status: 'pending' }));
 
     // Count medicines
     const totalDonations = await Medicine.countDocuments();
@@ -146,7 +146,7 @@ const verifyRequest = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please specify status as approved or rejected' });
     }
 
-    const request = await Request.findById(req.params.id).populate('medicine');
+    const request = await Request.findById(req.params.id);
     if (!request) {
       return res.status(404).json({ success: false, message: 'Request not found' });
     }
@@ -155,7 +155,14 @@ const verifyRequest = async (req, res) => {
       return res.status(400).json({ success: false, message: `This request has already been ${request.status}` });
     }
 
-    const medicine = request.medicine;
+    const medId = request.medicine && request.medicine._id ? request.medicine._id : request.medicine;
+    const medicine = await Medicine.findById(medId);
+    if (!medicine) {
+      return res.status(404).json({
+        success: false,
+        message: 'The medicine referenced by this request was not found or has been deleted.',
+      });
+    }
 
     if (status === 'approved') {
       // Double check medicine stock and validity
@@ -163,7 +170,7 @@ const verifyRequest = async (req, res) => {
         return res.status(400).json({ success: false, message: 'Medicine is not in approved/available status' });
       }
 
-      if (medicine.expiryDate < new Date()) {
+      if (new Date(medicine.expiryDate) < new Date()) {
         return res.status(400).json({ success: false, message: 'Medicine has expired' });
       }
 
@@ -187,7 +194,7 @@ const verifyRequest = async (req, res) => {
       request.status = 'rejected';
     }
 
-    request.adminRemarks = adminRemarks || '';
+    request.adminRemarks = adminRemarks ? adminRemarks.trim() : '';
     request.updatedAt = new Date();
     await request.save();
 
@@ -209,7 +216,9 @@ const getAllUsers = async (req, res) => {
   try {
     const { role } = req.query;
     let query = {};
-    if (role) {
+    if (role === 'beneficiary' || role === 'ngo') {
+      query = { $or: [{ role: 'beneficiary' }, { role: 'ngo' }] };
+    } else if (role) {
       query.role = role;
     }
 
@@ -256,6 +265,166 @@ const updateUserStatus = async (req, res) => {
   }
 };
 
+// Helper to validate phone number format (standard 10-digit number with optional +country code)
+const validatePhoneNumber = (phone) => {
+  if (!phone || typeof phone !== 'string') return false;
+  const cleaned = phone.trim().replace(/[\s\-()]/g, '');
+  if (!/^\+?[0-9]+$/.test(cleaned)) return false;
+  return /^(?:\+[1-9]\d{0,3})?[0-9]{10}$/.test(cleaned);
+};
+
+// @desc    Validate a phone number directly
+// @route   POST /api/admin/validate-phone
+// @access  Private (Admin only)
+const validateAdminPhone = async (req, res) => {
+  try {
+    const { phone } = req.body;
+    if (!phone) {
+      return res.status(400).json({
+        success: false,
+        valid: false,
+        message: 'Phone number is required.',
+      });
+    }
+
+    const isValid = validatePhoneNumber(phone);
+    if (!isValid) {
+      return res.status(400).json({
+        success: false,
+        valid: false,
+        message: 'Invalid phone number format. Please provide a valid 10-digit phone number (e.g. 9876543210 or +91 9876543210).',
+      });
+    }
+
+    const cleaned = String(phone).trim().replace(/[\s\-()]/g, '');
+    return res.status(200).json({
+      success: true,
+      valid: true,
+      message: 'Phone number is valid.',
+      data: {
+        phone: String(phone).trim(),
+        formattedPhone: cleaned,
+      },
+    });
+  } catch (error) {
+    console.error('Validate phone error:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get admin profile
+// @route   GET /api/admin/profile
+// @access  Private (Admin only)
+const getAdminProfile = async (req, res) => {
+  try {
+    const admin = await User.findById(req.user._id);
+    if (!admin) {
+      return res.status(404).json({ success: false, message: 'Admin user not found' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: admin,
+    });
+  } catch (error) {
+    console.error('Get admin profile error:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Update admin profile (with phone validation)
+// @route   PUT /api/admin/profile
+// @access  Private (Admin only)
+const updateAdminProfile = async (req, res) => {
+  try {
+    const { name, phone, address } = req.body;
+    const admin = await User.findById(req.user._id);
+    if (!admin) {
+      return res.status(404).json({ success: false, message: 'Admin user not found' });
+    }
+
+    if (phone !== undefined) {
+      const trimmedPhone = String(phone).trim();
+      if (!trimmedPhone) {
+        return res.status(400).json({
+          success: false,
+          message: 'Phone number cannot be empty.',
+        });
+      }
+      if (!validatePhoneNumber(trimmedPhone)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid phone number format. Please provide a valid 10-digit phone number (e.g. 9876543210 or +91 9876543210).',
+        });
+      }
+      admin.phone = trimmedPhone;
+    }
+
+    if (name !== undefined) admin.name = String(name).trim();
+    if (address !== undefined) admin.address = String(address).trim();
+
+    await admin.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Admin profile and phone number updated successfully.',
+      data: admin,
+    });
+  } catch (error) {
+    console.error('Update admin profile error:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Update user details (with phone validation)
+// @route   PUT /api/admin/users/:id
+// @access  Private (Admin only)
+const updateUserDetails = async (req, res) => {
+  try {
+    const { name, phone, address, organizationName, registrationNumber, website } = req.body;
+
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (phone !== undefined) {
+      const trimmedPhone = String(phone).trim();
+      if (trimmedPhone && !validatePhoneNumber(trimmedPhone)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid phone number format. Please provide a valid 10-digit phone number (e.g. 9876543210 or +91 9876543210).',
+        });
+      }
+      user.phone = trimmedPhone;
+    }
+
+    if (name !== undefined) user.name = name.trim();
+    if (address !== undefined) user.address = address.trim();
+    if (organizationName !== undefined) user.organizationName = organizationName.trim();
+    if (registrationNumber !== undefined) user.registrationNumber = registrationNumber.trim();
+    if (website !== undefined) user.website = website.trim();
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'User details updated successfully.',
+      data: user,
+    });
+  } catch (error) {
+    console.error('Update user details error:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Helper to escape and sanitize CSV cells
+const escapeCSV = (value) => {
+  if (value === null || value === undefined) return '""';
+  const clean = String(value).replace(/\r?\n|\r/g, ' ').replace(/"/g, '""');
+  return `"${clean}"`;
+};
+
 // @desc    Generate report data (CSV)
 // @route   GET /api/admin/reports/:type
 // @access  Private (Admin only)
@@ -271,16 +440,16 @@ const generateReport = async (req, res) => {
       
       donations.forEach((med) => {
         const id = med._id;
-        const name = `"${med.name.replace(/"/g, '""')}"`;
-        const mfg = `"${med.manufacturer.replace(/"/g, '""')}"`;
-        const batch = `"${med.batchNumber.replace(/"/g, '""')}"`;
-        const expiry = med.expiryDate.toISOString().split('T')[0];
+        const name = escapeCSV(med.name);
+        const mfg = escapeCSV(med.manufacturer);
+        const batch = escapeCSV(med.batchNumber);
+        const expiry = med.expiryDate ? new Date(med.expiryDate).toISOString().split('T')[0] : 'N/A';
         const origQty = med.originalQuantity;
         const remQty = med.quantity;
         const status = med.status;
-        const donorName = med.donor ? `"${med.donor.name.replace(/"/g, '""')}"` : 'N/A';
+        const donorName = med.donor ? escapeCSV(med.donor.name) : '"N/A"';
         const donorEmail = med.donor ? med.donor.email : 'N/A';
-        const created = med.createdAt.toISOString().split('T')[0];
+        const created = med.createdAt ? new Date(med.createdAt).toISOString().split('T')[0] : 'N/A';
 
         csvContent += `${id},${name},${mfg},${batch},${expiry},${origQty},${remQty},${status},${donorName},${donorEmail},${created}\n`;
       });
@@ -298,16 +467,16 @@ const generateReport = async (req, res) => {
 
       requests.forEach((reqItem) => {
         const id = reqItem._id;
-        const medName = reqItem.medicine ? `"${reqItem.medicine.name.replace(/"/g, '""')}"` : 'Deleted Medicine';
-        const batch = reqItem.medicine ? `"${reqItem.medicine.batchNumber.replace(/"/g, '""')}"` : 'N/A';
-        const reqName = reqItem.requester ? `"${reqItem.requester.name.replace(/"/g, '""')}"` : 'N/A';
+        const medName = reqItem.medicine ? escapeCSV(reqItem.medicine.name) : '"Deleted Medicine"';
+        const batch = reqItem.medicine ? escapeCSV(reqItem.medicine.batchNumber) : '"N/A"';
+        const reqName = reqItem.requester ? escapeCSV(reqItem.requester.name) : '"N/A"';
         const reqEmail = reqItem.requester ? reqItem.requester.email : 'N/A';
-        const org = reqItem.requester && reqItem.requester.organizationName ? `"${reqItem.requester.organizationName.replace(/"/g, '""')}"` : 'N/A';
+        const org = reqItem.requester && reqItem.requester.organizationName ? escapeCSV(reqItem.requester.organizationName) : '"N/A"';
         const qty = reqItem.quantity;
         const status = reqItem.status;
-        const reason = `"${reqItem.reason.replace(/"/g, '""')}"`;
-        const remarks = reqItem.adminRemarks ? `"${reqItem.adminRemarks.replace(/"/g, '""')}"` : '';
-        const created = reqItem.requestDate.toISOString().split('T')[0];
+        const reason = escapeCSV(reqItem.reason);
+        const remarks = escapeCSV(reqItem.adminRemarks || '');
+        const created = reqItem.requestDate ? new Date(reqItem.requestDate).toISOString().split('T')[0] : 'N/A';
 
         csvContent += `${id},${medName},${batch},${reqName},${reqEmail},${org},${qty},${status},${reason},${remarks},${created}\n`;
       });
@@ -333,5 +502,10 @@ module.exports = {
   verifyRequest,
   getAllUsers,
   updateUserStatus,
+  updateUserDetails,
+  validatePhoneNumber,
+  validateAdminPhone,
+  getAdminProfile,
+  updateAdminProfile,
   generateReport,
 };

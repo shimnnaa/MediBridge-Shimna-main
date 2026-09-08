@@ -8,6 +8,10 @@ const {
   verifyRequest,
   getAllUsers,
   updateUserStatus,
+  updateUserDetails,
+  validateAdminPhone,
+  getAdminProfile,
+  updateAdminProfile,
   generateReport,
 } = require('../controllers/adminController');
 const { protect, authorize } = require('../middleware/authMiddleware');
@@ -16,6 +20,12 @@ const { protect, authorize } = require('../middleware/authMiddleware');
 router.use(protect, authorize('admin'));
 
 router.get('/dashboard', getDashboardStats);
+
+router.route('/profile')
+  .get(getAdminProfile)
+  .put(updateAdminProfile);
+
+router.post('/validate-phone', validateAdminPhone);
 
 router.route('/donations')
   .get(getAllDonations);
@@ -28,6 +38,7 @@ router.put('/requests/:id/verify', verifyRequest);
 router.route('/users')
   .get(getAllUsers);
 router.put('/users/:id/status', updateUserStatus);
+router.put('/users/:id', updateUserDetails);
 
 router.get('/reports/:type', generateReport);
 
