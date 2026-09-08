@@ -38,22 +38,43 @@ const protect = async (req, res, next) => {
 // Grant access to specific roles
 const authorize = (...roles) => {
   return (req, res, next) => {
-    if (!req.user || !roles.includes(req.user.role)) {
+    if (!req.user) {
       return res.status(403).json({
         success: false,
-        message: `User role '${req.user ? req.user.role : 'none'}' is not authorized to access this route`,
+        message: 'User is not authorized',
+      });
+    }
+
+    const userRole = req.user.role;
+    // If beneficiary is authorized, allow both 'beneficiary' and 'ngo'
+    const expandedRoles = [...roles];
+    if (roles.includes('beneficiary') && !expandedRoles.includes('ngo')) {
+      expandedRoles.push('ngo');
+    }
+    if (roles.includes('ngo') && !expandedRoles.includes('beneficiary')) {
+      expandedRoles.push('beneficiary');
+    }
+
+    if (!expandedRoles.includes(userRole)) {
+      return res.status(403).json({
+        success: false,
+        message: `User role '${userRole}' is not authorized to access this route`,
       });
     }
     next();
   };
 };
 
-// Ensure beneficiary is approved by admin before performing actions
+// Ensure beneficiary/NGO is not rejected or blocked by admin
 const checkApprovedBeneficiary = (req, res, next) => {
-  if (req.user && req.user.role === 'beneficiary' && req.user.status !== 'approved') {
+  if (
+    req.user &&
+    (req.user.role === 'beneficiary' || req.user.role === 'ngo') &&
+    req.user.status === 'rejected'
+  ) {
     return res.status(403).json({
       success: false,
-      message: 'Your account is pending admin approval. You cannot perform this action yet.',
+      message: 'Your account registration was rejected or restricted by the administrator.',
     });
   }
   next();

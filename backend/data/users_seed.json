@@ -1,0 +1,116 @@
+[
+  {
+    "_id": "66a000000000000000000001",
+    "name": "System Administrator",
+    "email": "admin@medibridge.com",
+    "password": "$2b$10$AuV20hSkv0qTKwPEwG23Te5VpXyOUPy9tDp6UK7wUiLDt6fLLdxPu",
+    "role": "admin",
+    "status": "active",
+    "phone": "1234567890",
+    "address": "MediBridge Central Headquarters",
+    "createdAt": "2026-08-18T06:51:24.531Z"
+  },
+  {
+    "_id": "66a000000000000000000002",
+    "name": "Dr. Rahul Sharma",
+    "email": "donor@medibridge.com",
+    "password": "$2b$10$AuV20hSkv0qTKwPEwG23Te/YYEJq0S/Rst6XQEMSDAU0xOKTLQ8yu",
+    "role": "donor",
+    "status": "active",
+    "phone": "9876543210",
+    "address": "45 Marine Drive, Mumbai",
+    "createdAt": "2026-08-18T06:51:24.532Z"
+  },
+  {
+    "_id": "66a000000000000000000003",
+    "name": "Ananya Verma (NGO Lead)",
+    "email": "ngo@medibridge.com",
+    "password": "$2b$10$AuV20hSkv0qTKwPEwG23TeFvR9sa7WF.nyiwKh6oZ1ayMWmja6Rvi",
+    "role": "beneficiary",
+    "status": "approved",
+    "organizationName": "Hope Care Rural Health Mission",
+    "registrationNumber": "NGO-IND-9842",
+    "website": "https://hopecare.org",
+    "phone": "9123456780",
+    "address": "12 Relief Road, Bangalore",
+    "createdAt": "2026-08-18T06:51:24.532Z"
+  },
+  {
+    "_id": "66a000000000000000000004",
+    "name": "Siddharth Rao (Community Aid)",
+    "email": "pending_ngo@medibridge.com",
+    "password": "$2b$10$AuV20hSkv0qTKwPEwG23TeFvR9sa7WF.nyiwKh6oZ1ayMWmja6Rvi",
+    "role": "beneficiary",
+    "status": "pending",
+    "organizationName": "Seva Care Foundation",
+    "registrationNumber": "NGO-SEVA-1102",
+    "website": "https://sevacare.org",
+    "phone": "9888776655",
+    "address": "78 Public Health Avenue, Kochi",
+    "createdAt": "2026-08-18T06:51:24.532Z"
+  },
+  {
+    "_id": "6a84021327e6e9c869fc306d",
+    "name": "anjum",
+    "email": "anjum@gmail.com",
+    "password": "$2b$10$y93Hi6vSj3GfIRCp4YHlquF0hrEcdkL63lYZUsGK9RailZpf6.446",
+    "role": "donor",
+    "phone": "0987654321",
+    "address": "perinthalmanna",
+    "createdAt": "2026-08-18T06:56:19.710Z"
+  },
+  {
+    "_id": "6a84893adec03ffbf9c358cf",
+    "name": "Test Donor",
+    "email": "testdonor@example.com",
+    "password": "$2b$10$lBv48D4aoTIsqxnH2yCvIeMiR36L./otq6OaDxdPR8fbkSE.dYkFC",
+    "role": "donor",
+    "phone": "9876543210",
+    "address": "123 Test St",
+    "createdAt": "2026-08-18T16:32:58.785Z"
+  },
+  {
+    "_id": "6a8489b7a0a515d701de08f7",
+    "status": "active",
+    "name": "Mohammed Shafi",
+    "email": "donor_1787070903617@medibridge.com",
+    "password": "$2b$10$0dM8vYiRXroQHwxRJOgnauVAB9OFDryXs9W44TO3nhXU8.a6B6beS",
+    "role": "donor",
+    "phone": "9847123456",
+    "address": "Calicut, Kerala",
+    "createdAt": "2026-08-18T16:35:03.677Z"
+  },
+  {
+    "_id": "6a848c870776d82498a8ca22",
+    "status": "active",
+    "name": "Dr. John Mathew",
+    "email": "donor_test_1787071623635@example.com",
+    "password": "$2b$10$j0GIbncy6tk8MB4pDMJgGuW/eJ/2hPjyEtJ/NAMApbCAjzKM2x3Me",
+    "role": "donor",
+    "phone": "9845012345",
+    "address": "Kochi Medical Center",
+    "createdAt": "2026-08-18T16:47:03.738Z"
+  },
+  {
+    "_id": "6a849396f9736fc2246d1a61",
+    "status": "active",
+    "name": "rinshana",
+    "email": "rinshana@gmail.com",
+    "password": "$2b$10$Ap7xrvUnP.0IpfkKZlRaXe8ZRKsXGClSatnEUlCk6U9fmrQnkvEMy",
+    "role": "donor",
+    "phone": "0987654321",
+    "address": "Perinthalmanna",
+    "createdAt": "2026-08-18T17:17:10.479Z"
+  },
+  {
+    "_id": "6a85361c7468cdcd8ea97f7a",
+    "status": "active",
+    "name": "sada",
+    "email": "sada@gmail.com",
+    "password": "$2b$10$HSfp9mw6XwA7wMBcOrMJou7GOx32KOpkzgJG5CxyKhss5lFrWV6fO",
+    "role": "donor",
+    "phone": "1234567890",
+    "address": "cherukara",
+    "createdAt": "2026-08-19T04:50:36.037Z"
+  }
+]

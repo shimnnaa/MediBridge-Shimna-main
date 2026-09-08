@@ -1,0 +1,13 @@
+[
+  {
+    "_id": "66c000000000000000000001",
+    "medicine": "66b000000000000000000001",
+    "requester": "66a000000000000000000003",
+    "quantity": 10,
+    "status": "pending",
+    "reason": "Free distribution camp for seasonal fever patients in rural village center.",
+    "adminRemarks": "",
+    "requestDate": "2026-08-18T06:51:24.532Z",
+    "updatedAt": "2026-08-18T06:51:24.532Z"
+  }
+]

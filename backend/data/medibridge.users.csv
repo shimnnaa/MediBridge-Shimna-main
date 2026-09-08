@@ -1,0 +1,3 @@
+_id,name,email,password,role,status,phone,address,createdAt,__v
+6a6c303e3dbd435ca5d4dc50,System Administrator,admin@medibridge.com,$2b$10$WLRpqJ3kiDL4tBqew3RGpel7O971Z8yyAdz/trwnQRZG.CNWEPT1y,admin,active,1234567890,MediBridge Headquarters,2026-07-31T05:18:54.006Z,0
+6a6c421296d18e4e3fcec22b,nishana,nishana@gmail.com,$2b$10$6JlcILrX1ihf.oKrSuDUHufB2AzK6nDp8vN8g8sJD5CwDP41kNDXm,donor,active,0987654321,ygygtgtf6,2026-07-31T06:34:58.638Z,0

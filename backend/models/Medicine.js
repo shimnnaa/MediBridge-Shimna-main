@@ -68,4 +68,16 @@ const medicineSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model('Medicine', medicineSchema);
+const MongooseMedicine = mongoose.model('Medicine', medicineSchema);
+const { LocalMedicine } = require('../config/localDb');
+
+const MedicineProxy = new Proxy(MongooseMedicine, {
+  get(target, prop) {
+    if (mongoose.connection && mongoose.connection.readyState === 1) {
+      return target[prop];
+    }
+    return LocalMedicine[prop] !== undefined ? LocalMedicine[prop] : target[prop];
+  },
+});
+
+module.exports = MedicineProxy;

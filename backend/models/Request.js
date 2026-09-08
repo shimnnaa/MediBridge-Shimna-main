@@ -43,4 +43,16 @@ const requestSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model('Request', requestSchema);
+const MongooseRequest = mongoose.model('Request', requestSchema);
+const { LocalRequest } = require('../config/localDb');
+
+const RequestProxy = new Proxy(MongooseRequest, {
+  get(target, prop) {
+    if (mongoose.connection && mongoose.connection.readyState === 1) {
+      return target[prop];
+    }
+    return LocalRequest[prop] !== undefined ? LocalRequest[prop] : target[prop];
+  },
+});
+
+module.exports = RequestProxy;

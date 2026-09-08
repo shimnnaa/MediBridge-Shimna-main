@@ -1,0 +1,315 @@
+[
+  {
+    "_id": "66b000000000000000000001",
+    "name": "Paracetamol 500mg Tablets",
+    "manufacturer": "GSK Pharmaceuticals",
+    "batchNumber": "BT-9081",
+    "expiryDate": "2027-08-18T06:51:24.531Z",
+    "quantity": 50,
+    "originalQuantity": 50,
+    "donor": "66a000000000000000000002",
+    "condition": "Sealed & Unopened",
+    "status": "approved",
+    "verificationDetails": {
+      "verifiedBy": "66a000000000000000000001",
+      "verifiedAt": "2026-08-18T06:51:24.532Z",
+      "remarks": "Batch verified. Packaging sealed and expiry verified."
+    },
+    "description": "Blister pack of 50 tablets. Store in cool, dry place.",
+    "createdAt": "2026-08-18T06:51:24.532Z"
+  },
+  {
+    "_id": "66b000000000000000000002",
+    "name": "Amoxicillin 250mg Capsules",
+    "manufacturer": "Pfizer Health",
+    "batchNumber": "AMX-4421",
+    "expiryDate": "2027-02-14T06:51:24.531Z",
+    "quantity": 30,
+    "originalQuantity": 30,
+    "donor": "66a000000000000000000002",
+    "condition": "Sealed & Unopened",
+    "status": "approved",
+    "verificationDetails": {
+      "verifiedBy": "66a000000000000000000001",
+      "verifiedAt": "2026-08-18T06:51:24.532Z",
+      "remarks": "Approved for clinical redistribution."
+    },
+    "description": "Unopened box of 30 antibiotic capsules.",
+    "createdAt": "2026-08-18T06:51:24.532Z"
+  },
+  {
+    "_id": "66b000000000000000000003",
+    "name": "Cetirizine 10mg Allergy Strips",
+    "manufacturer": "Cipla Ltd",
+    "batchNumber": "CTZ-1022",
+    "expiryDate": "2026-11-16T06:51:24.531Z",
+    "quantity": 25,
+    "originalQuantity": 25,
+    "donor": "66a000000000000000000002",
+    "condition": "Loose Strips",
+    "status": "approved",
+    "description": "Sealed strips, unexpired allergy relief medicine.",
+    "createdAt": "2026-08-18T06:51:24.532Z",
+    "verificationDetails": {
+      "verifiedBy": "66a000000000000000000001",
+      "verifiedAt": "2026-08-18T07:02:35.641Z",
+      "remarks": "verified"
+    }
+  },
+  {
+    "_id": "6a848717d897c4c535d1e1c4",
+    "name": "Ibuprofen 400mg",
+    "manufacturer": "Abbott",
+    "batchNumber": "IBU-99",
+    "expiryDate": "2027-12-31T00:00:00.000Z",
+    "quantity": 20,
+    "originalQuantity": 20,
+    "donor": "66a000000000000000000002",
+    "description": "",
+    "condition": "Sealed & Unopened",
+    "status": "approved",
+    "createdAt": "2026-08-18T16:23:51.998Z",
+    "verificationDetails": {
+      "verifiedBy": "66a000000000000000000001",
+      "verifiedAt": "2026-08-18T17:24:27.988Z",
+      "remarks": "approved"
+    }
+  },
+  {
+    "_id": "6a84947e226506710b625ca5",
+    "status": "approved",
+    "name": "Cetirizine 10mg Tablets",
+    "manufacturer": "Sun Pharma",
+    "batchNumber": "CTZ-6734",
+    "expiryDate": "2028-09-30T00:00:00.000Z",
+    "quantity": 30,
+    "originalQuantity": 30,
+    "donor": "6a849396f9736fc2246d1a61",
+    "description": "Store in cool, dry place away from direct sunlight.",
+    "condition": "Sealed & Unopened",
+    "createdAt": "2026-08-18T17:21:02.421Z",
+    "verificationDetails": {
+      "verifiedBy": "66a000000000000000000001",
+      "verifiedAt": "2026-08-18T17:24:07.078Z",
+      "remarks": "Verified and approved for clinical distribution."
+    }
+  },
+  {
+    "_id": "66b000000000000000000010",
+    "name": "Metformin 500mg (Glycomet)",
+    "manufacturer": "USV Pvt Ltd",
+    "batchNumber": "GLY-8841",
+    "expiryDate": "2027-10-15T00:00:00.000Z",
+    "quantity": 60,
+    "originalQuantity": 60,
+    "donor": "66a000000000000000000002",
+    "condition": "Sealed & Unopened",
+    "status": "approved",
+    "description": "Antidiabetic oral medication for type 2 diabetes management.",
+    "createdAt": "2026-08-19T06:30:00.000Z",
+    "verificationDetails": {
+      "verifiedBy": "66a000000000000000000001",
+      "verifiedAt": "2026-08-19T07:00:00.000Z",
+      "remarks": "Blister packaging sealed and authentic."
+    }
+  },
+  {
+    "_id": "66b000000000000000000011",
+    "name": "Azithromycin 500mg (Azee 500)",
+    "manufacturer": "Cipla Ltd",
+    "batchNumber": "AZI-3012",
+    "expiryDate": "2027-06-20T00:00:00.000Z",
+    "quantity": 40,
+    "originalQuantity": 40,
+    "donor": "66a000000000000000000002",
+    "condition": "Sealed & Unopened",
+    "status": "approved",
+    "description": "Broad spectrum macrolide antibiotic strip. Store below 25°C.",
+    "createdAt": "2026-08-19T06:35:00.000Z",
+    "verificationDetails": {
+      "verifiedBy": "66a000000000000000000001",
+      "verifiedAt": "2026-08-19T07:05:00.000Z",
+      "remarks": "Batch and expiry verified."
+    }
+  },
+  {
+    "_id": "66b000000000000000000012",
+    "name": "Pantoprazole 40mg (Pan 40)",
+    "manufacturer": "Alkem Laboratories",
+    "batchNumber": "PAN-9021",
+    "expiryDate": "2028-01-10T00:00:00.000Z",
+    "quantity": 50,
+    "originalQuantity": 50,
+    "donor": "6a848c870776d82498a8ca22",
+    "condition": "Sealed & Unopened",
+    "status": "approved",
+    "description": "Proton pump inhibitor for acidity, GERD, and peptic ulcer relief.",
+    "createdAt": "2026-08-19T06:40:00.000Z",
+    "verificationDetails": {
+      "verifiedBy": "66a000000000000000000001",
+      "verifiedAt": "2026-08-19T07:10:00.000Z",
+      "remarks": "Authentic blister strips verified."
+    }
+  },
+  {
+    "_id": "66b000000000000000000013",
+    "name": "Amlodipine 5mg (Amlong)",
+    "manufacturer": "Micro Labs",
+    "batchNumber": "AML-1192",
+    "expiryDate": "2027-11-30T00:00:00.000Z",
+    "quantity": 45,
+    "originalQuantity": 45,
+    "donor": "66a000000000000000000002",
+    "condition": "Sealed & Unopened",
+    "status": "approved",
+    "description": "Calcium channel blocker prescribed for hypertension & angina.",
+    "createdAt": "2026-08-19T06:45:00.000Z",
+    "verificationDetails": {
+      "verifiedBy": "66a000000000000000000001",
+      "verifiedAt": "2026-08-19T07:15:00.000Z",
+      "remarks": "Approved for NGO requests."
+    }
+  },
+  {
+    "_id": "66b000000000000000000014",
+    "name": "Telmisartan 40mg (Telma 40)",
+    "manufacturer": "Glenmark Pharmaceuticals",
+    "batchNumber": "TEL-4431",
+    "expiryDate": "2027-09-25T00:00:00.000Z",
+    "quantity": 30,
+    "originalQuantity": 30,
+    "donor": "6a84021327e6e9c869fc306d",
+    "condition": "Sealed & Unopened",
+    "status": "approved",
+    "description": "Angiotensin II receptor antagonist for blood pressure control.",
+    "createdAt": "2026-08-19T06:50:00.000Z",
+    "verificationDetails": {
+      "verifiedBy": "66a000000000000000000001",
+      "verifiedAt": "2026-08-19T07:20:00.000Z",
+      "remarks": "Inspected and approved."
+    }
+  },
+  {
+    "_id": "66b000000000000000000015",
+    "name": "Omeprazole 20mg Capsules (Omez)",
+    "manufacturer": "Dr. Reddy's Laboratories",
+    "batchNumber": "OMZ-7712",
+    "expiryDate": "2027-04-18T00:00:00.000Z",
+    "quantity": 35,
+    "originalQuantity": 35,
+    "donor": "66a000000000000000000002",
+    "condition": "Sealed & Unopened",
+    "status": "approved",
+    "description": "Gastro-resistant capsules for acid reduction and gastritis.",
+    "createdAt": "2026-08-19T06:55:00.000Z",
+    "verificationDetails": {
+      "verifiedBy": "66a000000000000000000001",
+      "verifiedAt": "2026-08-19T07:25:00.000Z",
+      "remarks": "Original bottle seal intact."
+    }
+  },
+  {
+    "_id": "66b000000000000000000016",
+    "name": "Montair-LC (Montelukast + Levocetirizine)",
+    "manufacturer": "Cipla Ltd",
+    "batchNumber": "MLC-5521",
+    "expiryDate": "2027-12-05T00:00:00.000Z",
+    "quantity": 25,
+    "originalQuantity": 25,
+    "donor": "6a8489b7a0a515d701de08f7",
+    "condition": "Sealed & Unopened",
+    "status": "approved",
+    "description": "Dual action antihistamine and leukotriene inhibitor for asthma & allergies.",
+    "createdAt": "2026-08-19T07:00:00.000Z",
+    "verificationDetails": {
+      "verifiedBy": "66a000000000000000000001",
+      "verifiedAt": "2026-08-19T07:30:00.000Z",
+      "remarks": "Verified."
+    }
+  },
+  {
+    "_id": "66b000000000000000000017",
+    "name": "Atorvastatin 10mg (Atorva)",
+    "manufacturer": "Zydus Cadila",
+    "batchNumber": "ATV-6632",
+    "expiryDate": "2028-03-15T00:00:00.000Z",
+    "quantity": 50,
+    "originalQuantity": 50,
+    "donor": "66a000000000000000000002",
+    "condition": "Sealed & Unopened",
+    "status": "approved",
+    "description": "Lipid-lowering statin medication to reduce cholesterol.",
+    "createdAt": "2026-08-19T07:05:00.000Z",
+    "verificationDetails": {
+      "verifiedBy": "66a000000000000000000001",
+      "verifiedAt": "2026-08-19T07:35:00.000Z",
+      "remarks": "Valid batch verified."
+    }
+  },
+  {
+    "_id": "66b000000000000000000018",
+    "name": "Dolo 650mg Paracetamol",
+    "manufacturer": "Micro Labs",
+    "batchNumber": "DLO-1029",
+    "expiryDate": "2028-04-20T00:00:00.000Z",
+    "quantity": 100,
+    "originalQuantity": 100,
+    "donor": "6a848c870776d82498a8ca22",
+    "condition": "Sealed & Unopened",
+    "status": "approved",
+    "description": "High-strength antipyretic and analgesic for pain and fever relief.",
+    "createdAt": "2026-08-19T07:10:00.000Z",
+    "verificationDetails": {
+      "verifiedBy": "66a000000000000000000001",
+      "verifiedAt": "2026-08-19T07:40:00.000Z",
+      "remarks": "Approved and listed in stock."
+    }
+  },
+  {
+    "_id": "66b000000000000000000019",
+    "name": "Ciprofloxacin 500mg (Ciplox 500)",
+    "manufacturer": "Cipla Ltd",
+    "batchNumber": "CIP-8819",
+    "expiryDate": "2027-08-30T00:00:00.000Z",
+    "quantity": 20,
+    "originalQuantity": 20,
+    "donor": "6a84021327e6e9c869fc306d",
+    "condition": "Sealed & Unopened",
+    "status": "pending",
+    "description": "Fluoroquinolone antibiotic for bacterial infections.",
+    "createdAt": "2026-08-19T07:15:00.000Z"
+  },
+  {
+    "_id": "66b000000000000000000020",
+    "name": "Vitamin D3 60,000 IU (Calcirol)",
+    "manufacturer": "Cadila Healthcare",
+    "batchNumber": "VTD-9943",
+    "expiryDate": "2028-05-10T00:00:00.000Z",
+    "quantity": 80,
+    "originalQuantity": 80,
+    "donor": "66a000000000000000000002",
+    "condition": "Sealed & Unopened",
+    "status": "pending",
+    "description": "High potency Cholecalciferol capsules for bone health and immunity.",
+    "createdAt": "2026-08-19T07:20:00.000Z"
+  },
+  {
+    "_id": "66b000000000000000000021",
+    "name": "Asthalin Inhaler 100mcg (Salbutamol)",
+    "manufacturer": "Cipla Ltd",
+    "batchNumber": "AST-3321",
+    "expiryDate": "2027-07-15T00:00:00.000Z",
+    "quantity": 15,
+    "originalQuantity": 15,
+    "donor": "6a848c870776d82498a8ca22",
+    "condition": "Sealed & Unopened",
+    "status": "approved",
+    "description": "Metered dose inhaler for quick relief from bronchospasm and asthma.",
+    "createdAt": "2026-08-19T07:25:00.000Z",
+    "verificationDetails": {
+      "verifiedBy": "66a000000000000000000001",
+      "verifiedAt": "2026-08-19T07:45:00.000Z",
+      "remarks": "Inhaler sealed in original blister wrap."
+    }
+  }
+]

@@ -1,0 +1,636 @@
+{
+  "users": [
+    {
+      "_id": "66a000000000000000000001",
+      "name": "System Administrator",
+      "email": "admin@medibridge.com",
+      "password": "$2b$10$AuV20hSkv0qTKwPEwG23Te5VpXyOUPy9tDp6UK7wUiLDt6fLLdxPu",
+      "role": "admin",
+      "status": "active",
+      "phone": "0987654321",
+      "address": "MediBridge Central Headquarters",
+      "createdAt": "2026-08-18T06:51:24.531Z"
+    },
+    {
+      "_id": "66a000000000000000000002",
+      "name": "Dr. Rahul Sharma",
+      "email": "donor@medibridge.com",
+      "password": "$2b$10$AuV20hSkv0qTKwPEwG23Te/YYEJq0S/Rst6XQEMSDAU0xOKTLQ8yu",
+      "role": "donor",
+      "status": "active",
+      "phone": "9876543210",
+      "address": "45 Marine Drive, Mumbai",
+      "createdAt": "2026-08-18T06:51:24.532Z"
+    },
+    {
+      "_id": "66a000000000000000000003",
+      "name": "Ananya Verma (NGO Lead)",
+      "email": "ngo@medibridge.com",
+      "password": "$2b$10$AuV20hSkv0qTKwPEwG23TeFvR9sa7WF.nyiwKh6oZ1ayMWmja6Rvi",
+      "role": "beneficiary",
+      "status": "approved",
+      "organizationName": "Hope Care Rural Health Mission",
+      "registrationNumber": "NGO-IND-9842",
+      "website": "https://hopecare.org",
+      "phone": "9123456780",
+      "address": "12 Relief Road, Bangalore",
+      "createdAt": "2026-08-18T06:51:24.532Z"
+    },
+    {
+      "_id": "66a000000000000000000004",
+      "name": "Siddharth Rao (Community Aid)",
+      "email": "pending_ngo@medibridge.com",
+      "password": "$2b$10$AuV20hSkv0qTKwPEwG23TeFvR9sa7WF.nyiwKh6oZ1ayMWmja6Rvi",
+      "role": "beneficiary",
+      "status": "approved",
+      "organizationName": "Seva Care Foundation",
+      "registrationNumber": "NGO-SEVA-1102",
+      "website": "https://sevacare.org",
+      "phone": "9888776655",
+      "address": "78 Public Health Avenue, Kochi",
+      "createdAt": "2026-08-18T06:51:24.532Z"
+    },
+    {
+      "_id": "6a84021327e6e9c869fc306d",
+      "name": "anjum",
+      "email": "anjum@gmail.com",
+      "password": "$2b$10$y93Hi6vSj3GfIRCp4YHlquF0hrEcdkL63lYZUsGK9RailZpf6.446",
+      "role": "donor",
+      "phone": "0987654321",
+      "address": "perinthalmanna",
+      "createdAt": "2026-08-18T06:56:19.710Z"
+    },
+    {
+      "_id": "6a84893adec03ffbf9c358cf",
+      "name": "Test Donor",
+      "email": "testdonor@example.com",
+      "password": "$2b$10$lBv48D4aoTIsqxnH2yCvIeMiR36L./otq6OaDxdPR8fbkSE.dYkFC",
+      "role": "donor",
+      "phone": "9876543210",
+      "address": "123 Test St",
+      "createdAt": "2026-08-18T16:32:58.785Z"
+    },
+    {
+      "_id": "6a8489b7a0a515d701de08f7",
+      "status": "active",
+      "name": "Mohammed Shafi",
+      "email": "donor_1787070903617@medibridge.com",
+      "password": "$2b$10$0dM8vYiRXroQHwxRJOgnauVAB9OFDryXs9W44TO3nhXU8.a6B6beS",
+      "role": "donor",
+      "phone": "9847123456",
+      "address": "Calicut, Kerala",
+      "createdAt": "2026-08-18T16:35:03.677Z"
+    },
+    {
+      "_id": "6a848c870776d82498a8ca22",
+      "status": "active",
+      "name": "Dr. John Mathew",
+      "email": "donor_test_1787071623635@example.com",
+      "password": "$2b$10$j0GIbncy6tk8MB4pDMJgGuW/eJ/2hPjyEtJ/NAMApbCAjzKM2x3Me",
+      "role": "donor",
+      "phone": "9845012345",
+      "address": "Kochi Medical Center",
+      "createdAt": "2026-08-18T16:47:03.738Z"
+    },
+    {
+      "_id": "6a849396f9736fc2246d1a61",
+      "status": "active",
+      "name": "rinshana",
+      "email": "rinshana@gmail.com",
+      "password": "$2b$10$Ap7xrvUnP.0IpfkKZlRaXe8ZRKsXGClSatnEUlCk6U9fmrQnkvEMy",
+      "role": "donor",
+      "phone": "0987654321",
+      "address": "Perinthalmanna",
+      "createdAt": "2026-08-18T17:17:10.479Z"
+    },
+    {
+      "_id": "6a85361c7468cdcd8ea97f7a",
+      "status": "active",
+      "name": "sada",
+      "email": "sada@gmail.com",
+      "password": "$2b$10$HSfp9mw6XwA7wMBcOrMJou7GOx32KOpkzgJG5CxyKhss5lFrWV6fO",
+      "role": "donor",
+      "phone": "1234567890",
+      "address": "cherukara",
+      "createdAt": "2026-08-19T04:50:36.037Z"
+    },
+    {
+      "_id": "6a9e52703f2eeb89a6335700",
+      "status": "approved",
+      "name": "shimna",
+      "email": "shimna@gmail.com",
+      "password": "$2b$10$YrBTxpVGqXRp3OR9DGUNp.jDk0VRxxxCGfHmGDkimNsxrcfibwC.6",
+      "role": "beneficiary",
+      "phone": "1234567890",
+      "address": "Perinthalmanna",
+      "organizationName": "health organization",
+      "registrationNumber": "reg-098",
+      "website": "http://healthorg",
+      "createdAt": "2026-09-07T05:58:08.456Z"
+    },
+    {
+      "_id": "6a9e53aadcbf5c9c256603cb",
+      "status": "approved",
+      "name": "nida",
+      "email": "nida@gmail.com",
+      "password": "$2b$10$EJjNTKdXORL3lwfTOH0dnu8yrA776WCiXtSLdqywq/tDpAlyKQzHO",
+      "role": "beneficiary",
+      "phone": "0987654321",
+      "address": "Perinthalmanna",
+      "organizationName": "health organization",
+      "registrationNumber": "reg-098",
+      "website": "http://healthorg",
+      "createdAt": "2026-09-07T06:03:22.918Z"
+    },
+    {
+      "_id": "6a9e59bab4ab9ba0bc1caa90",
+      "status": "approved",
+      "name": "Ravi Kumar",
+      "email": "patient_1788762554099@example.com",
+      "password": "$2b$10$TKruGpAWjBXwtG10gI/L..JvwdD/eNk/Ck92vQNiWiBpxR5tw4n06",
+      "role": "beneficiary",
+      "phone": "9876543210",
+      "address": "Near Govt Hospital, Calicut",
+      "organizationName": "",
+      "registrationNumber": "",
+      "website": "",
+      "createdAt": "2026-09-07T06:29:14.202Z"
+    },
+    {
+      "_id": "6a9e59bac450ce8993b73cc4",
+      "status": "approved",
+      "name": "Sister Mary Care",
+      "email": "ngo_1788762554471@example.com",
+      "password": "$2b$10$NrcLnffEvYN7EFFi31qXEe1u4BKpnoLBMUnoljFdX3AHVh4QD6qMG",
+      "role": "ngo",
+      "phone": "9845123456",
+      "address": "Community Care Center, Kochi",
+      "organizationName": "Mercy Community Health Clinic",
+      "registrationNumber": "NGO-KL-2026-99",
+      "website": "https://mercycare.org",
+      "createdAt": "2026-09-07T06:29:14.488Z"
+    }
+  ],
+  "medicines": [
+    {
+      "_id": "66b000000000000000000001",
+      "name": "Paracetamol 500mg Tablets",
+      "manufacturer": "GSK Pharmaceuticals",
+      "batchNumber": "BT-9081",
+      "expiryDate": "2027-08-18T06:51:24.531Z",
+      "quantity": 50,
+      "originalQuantity": 50,
+      "donor": "66a000000000000000000002",
+      "condition": "Sealed & Unopened",
+      "status": "approved",
+      "verificationDetails": {
+        "verifiedBy": "66a000000000000000000001",
+        "verifiedAt": "2026-08-18T06:51:24.532Z",
+        "remarks": "Batch verified. Packaging sealed and expiry verified."
+      },
+      "description": "Blister pack of 50 tablets. Store in cool, dry place.",
+      "createdAt": "2026-08-18T06:51:24.532Z"
+    },
+    {
+      "_id": "66b000000000000000000002",
+      "name": "Amoxicillin 250mg Capsules",
+      "manufacturer": "Pfizer Health",
+      "batchNumber": "AMX-4421",
+      "expiryDate": "2027-02-14T06:51:24.531Z",
+      "quantity": 30,
+      "originalQuantity": 30,
+      "donor": "66a000000000000000000002",
+      "condition": "Sealed & Unopened",
+      "status": "approved",
+      "verificationDetails": {
+        "verifiedBy": "66a000000000000000000001",
+        "verifiedAt": "2026-08-18T06:51:24.532Z",
+        "remarks": "Approved for clinical redistribution."
+      },
+      "description": "Unopened box of 30 antibiotic capsules.",
+      "createdAt": "2026-08-18T06:51:24.532Z"
+    },
+    {
+      "_id": "66b000000000000000000003",
+      "name": "Cetirizine 10mg Allergy Strips",
+      "manufacturer": "Cipla Ltd",
+      "batchNumber": "CTZ-1022",
+      "expiryDate": "2026-11-16T06:51:24.531Z",
+      "quantity": 23,
+      "originalQuantity": 25,
+      "donor": "66a000000000000000000002",
+      "condition": "Loose Strips",
+      "status": "approved",
+      "description": "Sealed strips, unexpired allergy relief medicine.",
+      "createdAt": "2026-08-18T06:51:24.532Z",
+      "verificationDetails": {
+        "verifiedBy": "66a000000000000000000001",
+        "verifiedAt": "2026-08-18T07:02:35.641Z",
+        "remarks": "verified"
+      }
+    },
+    {
+      "_id": "6a848717d897c4c535d1e1c4",
+      "name": "Ibuprofen 400mg",
+      "manufacturer": "Abbott",
+      "batchNumber": "IBU-99",
+      "expiryDate": "2027-12-31T00:00:00.000Z",
+      "quantity": 20,
+      "originalQuantity": 20,
+      "donor": "66a000000000000000000002",
+      "description": "",
+      "condition": "Sealed & Unopened",
+      "status": "approved",
+      "createdAt": "2026-08-18T16:23:51.998Z",
+      "verificationDetails": {
+        "verifiedBy": "66a000000000000000000001",
+        "verifiedAt": "2026-08-18T17:24:27.988Z",
+        "remarks": "approved"
+      }
+    },
+    {
+      "_id": "6a84947e226506710b625ca5",
+      "status": "approved",
+      "name": "Cetirizine 10mg Tablets",
+      "manufacturer": "Sun Pharma",
+      "batchNumber": "CTZ-6734",
+      "expiryDate": "2028-09-30T00:00:00.000Z",
+      "quantity": 30,
+      "originalQuantity": 30,
+      "donor": "6a849396f9736fc2246d1a61",
+      "description": "Store in cool, dry place away from direct sunlight.",
+      "condition": "Sealed & Unopened",
+      "createdAt": "2026-08-18T17:21:02.421Z",
+      "verificationDetails": {
+        "verifiedBy": "66a000000000000000000001",
+        "verifiedAt": "2026-08-18T17:24:07.078Z",
+        "remarks": "Verified and approved for clinical distribution."
+      }
+    },
+    {
+      "_id": "66b000000000000000000010",
+      "name": "Metformin 500mg (Glycomet)",
+      "manufacturer": "USV Pvt Ltd",
+      "batchNumber": "GLY-8841",
+      "expiryDate": "2027-10-15T00:00:00.000Z",
+      "quantity": 60,
+      "originalQuantity": 60,
+      "donor": "66a000000000000000000002",
+      "condition": "Sealed & Unopened",
+      "status": "approved",
+      "description": "Antidiabetic oral medication for type 2 diabetes management.",
+      "createdAt": "2026-08-19T06:30:00.000Z",
+      "verificationDetails": {
+        "verifiedBy": "66a000000000000000000001",
+        "verifiedAt": "2026-08-19T07:00:00.000Z",
+        "remarks": "Blister packaging sealed and authentic."
+      }
+    },
+    {
+      "_id": "66b000000000000000000011",
+      "name": "Azithromycin 500mg (Azee 500)",
+      "manufacturer": "Cipla Ltd",
+      "batchNumber": "AZI-3012",
+      "expiryDate": "2027-06-20T00:00:00.000Z",
+      "quantity": 40,
+      "originalQuantity": 40,
+      "donor": "66a000000000000000000002",
+      "condition": "Sealed & Unopened",
+      "status": "approved",
+      "description": "Broad spectrum macrolide antibiotic strip. Store below 25°C.",
+      "createdAt": "2026-08-19T06:35:00.000Z",
+      "verificationDetails": {
+        "verifiedBy": "66a000000000000000000001",
+        "verifiedAt": "2026-08-19T07:05:00.000Z",
+        "remarks": "Batch and expiry verified."
+      }
+    },
+    {
+      "_id": "66b000000000000000000012",
+      "name": "Pantoprazole 40mg (Pan 40)",
+      "manufacturer": "Alkem Laboratories",
+      "batchNumber": "PAN-9021",
+      "expiryDate": "2028-01-10T00:00:00.000Z",
+      "quantity": 50,
+      "originalQuantity": 50,
+      "donor": "6a848c870776d82498a8ca22",
+      "condition": "Sealed & Unopened",
+      "status": "approved",
+      "description": "Proton pump inhibitor for acidity, GERD, and peptic ulcer relief.",
+      "createdAt": "2026-08-19T06:40:00.000Z",
+      "verificationDetails": {
+        "verifiedBy": "66a000000000000000000001",
+        "verifiedAt": "2026-08-19T07:10:00.000Z",
+        "remarks": "Authentic blister strips verified."
+      }
+    },
+    {
+      "_id": "66b000000000000000000013",
+      "name": "Amlodipine 5mg (Amlong)",
+      "manufacturer": "Micro Labs",
+      "batchNumber": "AML-1192",
+      "expiryDate": "2027-11-30T00:00:00.000Z",
+      "quantity": 45,
+      "originalQuantity": 45,
+      "donor": "66a000000000000000000002",
+      "condition": "Sealed & Unopened",
+      "status": "approved",
+      "description": "Calcium channel blocker prescribed for hypertension & angina.",
+      "createdAt": "2026-08-19T06:45:00.000Z",
+      "verificationDetails": {
+        "verifiedBy": "66a000000000000000000001",
+        "verifiedAt": "2026-08-19T07:15:00.000Z",
+        "remarks": "Approved for NGO requests."
+      }
+    },
+    {
+      "_id": "66b000000000000000000014",
+      "name": "Telmisartan 40mg (Telma 40)",
+      "manufacturer": "Glenmark Pharmaceuticals",
+      "batchNumber": "TEL-4431",
+      "expiryDate": "2027-09-25T00:00:00.000Z",
+      "quantity": 30,
+      "originalQuantity": 30,
+      "donor": "6a84021327e6e9c869fc306d",
+      "condition": "Sealed & Unopened",
+      "status": "approved",
+      "description": "Angiotensin II receptor antagonist for blood pressure control.",
+      "createdAt": "2026-08-19T06:50:00.000Z",
+      "verificationDetails": {
+        "verifiedBy": "66a000000000000000000001",
+        "verifiedAt": "2026-08-19T07:20:00.000Z",
+        "remarks": "Inspected and approved."
+      }
+    },
+    {
+      "_id": "66b000000000000000000015",
+      "name": "Omeprazole 20mg Capsules (Omez)",
+      "manufacturer": "Dr. Reddy's Laboratories",
+      "batchNumber": "OMZ-7712",
+      "expiryDate": "2027-04-18T00:00:00.000Z",
+      "quantity": 35,
+      "originalQuantity": 35,
+      "donor": "66a000000000000000000002",
+      "condition": "Sealed & Unopened",
+      "status": "approved",
+      "description": "Gastro-resistant capsules for acid reduction and gastritis.",
+      "createdAt": "2026-08-19T06:55:00.000Z",
+      "verificationDetails": {
+        "verifiedBy": "66a000000000000000000001",
+        "verifiedAt": "2026-08-19T07:25:00.000Z",
+        "remarks": "Original bottle seal intact."
+      }
+    },
+    {
+      "_id": "66b000000000000000000016",
+      "name": "Montair-LC (Montelukast + Levocetirizine)",
+      "manufacturer": "Cipla Ltd",
+      "batchNumber": "MLC-5521",
+      "expiryDate": "2027-12-05T00:00:00.000Z",
+      "quantity": 25,
+      "originalQuantity": 25,
+      "donor": "6a8489b7a0a515d701de08f7",
+      "condition": "Sealed & Unopened",
+      "status": "approved",
+      "description": "Dual action antihistamine and leukotriene inhibitor for asthma & allergies.",
+      "createdAt": "2026-08-19T07:00:00.000Z",
+      "verificationDetails": {
+        "verifiedBy": "66a000000000000000000001",
+        "verifiedAt": "2026-08-19T07:30:00.000Z",
+        "remarks": "Verified."
+      }
+    },
+    {
+      "_id": "66b000000000000000000017",
+      "name": "Atorvastatin 10mg (Atorva)",
+      "manufacturer": "Zydus Cadila",
+      "batchNumber": "ATV-6632",
+      "expiryDate": "2028-03-15T00:00:00.000Z",
+      "quantity": 50,
+      "originalQuantity": 50,
+      "donor": "66a000000000000000000002",
+      "condition": "Sealed & Unopened",
+      "status": "approved",
+      "description": "Lipid-lowering statin medication to reduce cholesterol.",
+      "createdAt": "2026-08-19T07:05:00.000Z",
+      "verificationDetails": {
+        "verifiedBy": "66a000000000000000000001",
+        "verifiedAt": "2026-08-19T07:35:00.000Z",
+        "remarks": "Valid batch verified."
+      }
+    },
+    {
+      "_id": "66b000000000000000000018",
+      "name": "Dolo 650mg Paracetamol",
+      "manufacturer": "Micro Labs",
+      "batchNumber": "DLO-1029",
+      "expiryDate": "2028-04-20T00:00:00.000Z",
+      "quantity": 100,
+      "originalQuantity": 100,
+      "donor": "6a848c870776d82498a8ca22",
+      "condition": "Sealed & Unopened",
+      "status": "approved",
+      "description": "High-strength antipyretic and analgesic for pain and fever relief.",
+      "createdAt": "2026-08-19T07:10:00.000Z",
+      "verificationDetails": {
+        "verifiedBy": "66a000000000000000000001",
+        "verifiedAt": "2026-08-19T07:40:00.000Z",
+        "remarks": "Approved and listed in stock."
+      }
+    },
+    {
+      "_id": "66b000000000000000000019",
+      "name": "Ciprofloxacin 500mg (Ciplox 500)",
+      "manufacturer": "Cipla Ltd",
+      "batchNumber": "CIP-8819",
+      "expiryDate": "2027-08-30T00:00:00.000Z",
+      "quantity": 20,
+      "originalQuantity": 20,
+      "donor": "6a84021327e6e9c869fc306d",
+      "condition": "Sealed & Unopened",
+      "status": "pending",
+      "description": "Fluoroquinolone antibiotic for bacterial infections.",
+      "createdAt": "2026-08-19T07:15:00.000Z"
+    },
+    {
+      "_id": "66b000000000000000000020",
+      "name": "Vitamin D3 60,000 IU (Calcirol)",
+      "manufacturer": "Cadila Healthcare",
+      "batchNumber": "VTD-9943",
+      "expiryDate": "2028-05-10T00:00:00.000Z",
+      "quantity": 80,
+      "originalQuantity": 80,
+      "donor": "66a000000000000000000002",
+      "condition": "Sealed & Unopened",
+      "status": "rejected",
+      "description": "High potency Cholecalciferol capsules for bone health and immunity.",
+      "createdAt": "2026-08-19T07:20:00.000Z",
+      "verificationDetails": {
+        "verifiedBy": "66a000000000000000000001",
+        "verifiedAt": "2026-08-20T06:17:07.105Z",
+        "remarks": ""
+      }
+    },
+    {
+      "_id": "66b000000000000000000021",
+      "name": "Asthalin Inhaler 100mcg (Salbutamol)",
+      "manufacturer": "Cipla Ltd",
+      "batchNumber": "AST-3321",
+      "expiryDate": "2027-07-15T00:00:00.000Z",
+      "quantity": 15,
+      "originalQuantity": 15,
+      "donor": "6a848c870776d82498a8ca22",
+      "condition": "Sealed & Unopened",
+      "status": "approved",
+      "description": "Metered dose inhaler for quick relief from bronchospasm and asthma.",
+      "createdAt": "2026-08-19T07:25:00.000Z",
+      "verificationDetails": {
+        "verifiedBy": "66a000000000000000000001",
+        "verifiedAt": "2026-08-19T07:45:00.000Z",
+        "remarks": "Inhaler sealed in original blister wrap."
+      }
+    },
+    {
+      "_id": "6a869cf4bf5526d7b8cb19d9",
+      "status": "approved",
+      "name": "cetrizine 10mg",
+      "manufacturer": "GSK",
+      "batchNumber": "CTZ-6734",
+      "expiryDate": "2028-10-01T00:00:00.000Z",
+      "quantity": 80,
+      "originalQuantity": 80,
+      "donor": "6a85361c7468cdcd8ea97f7a",
+      "description": "",
+      "condition": "Sealed & Unopened",
+      "createdAt": "2026-08-20T06:21:40.875Z",
+      "verificationDetails": {
+        "verifiedBy": "66a000000000000000000001",
+        "verifiedAt": "2026-08-20T06:22:52.097Z",
+        "remarks": ""
+      }
+    },
+    {
+      "_id": "6a994b1e8c4bf5c19bdea7c5",
+      "status": "approved",
+      "name": "Amoxicillin Trihydrate 500mg (Test Batch)",
+      "manufacturer": "Cipla Laboratories",
+      "batchNumber": "TEST-BATCH-1788431134103",
+      "expiryDate": "2027-01-01T00:00:00.000Z",
+      "quantity": 35,
+      "originalQuantity": 50,
+      "donor": "66a000000000000000000002",
+      "description": "Sealed blisters for community health clinic testing.",
+      "condition": "Sealed & Unopened",
+      "createdAt": "2026-09-03T10:25:34.110Z",
+      "verificationDetails": {
+        "verifiedBy": "66a000000000000000000001",
+        "verifiedAt": "2026-09-03T10:25:34.126Z",
+        "remarks": "Automated verification test approval - all safety specs valid."
+      }
+    },
+    {
+      "_id": "6a994c0d108cc4bf72b5704a",
+      "status": "approved",
+      "name": "Amoxicillin Trihydrate 500mg (Test Batch)",
+      "manufacturer": "Cipla Laboratories",
+      "batchNumber": "TEST-BATCH-1788431373400",
+      "expiryDate": "2027-01-01T00:00:00.000Z",
+      "quantity": 35,
+      "originalQuantity": 50,
+      "donor": "66a000000000000000000002",
+      "description": "Sealed blisters for community health clinic testing.",
+      "condition": "Sealed & Unopened",
+      "createdAt": "2026-09-03T10:29:33.419Z",
+      "verificationDetails": {
+        "verifiedBy": "66a000000000000000000001",
+        "verifiedAt": "2026-09-03T10:29:33.466Z",
+        "remarks": "Automated verification test approval - all safety specs valid."
+      }
+    }
+  ],
+  "requests": [
+    {
+      "_id": "66c000000000000000000001",
+      "medicine": "66b000000000000000000001",
+      "requester": "66a000000000000000000003",
+      "quantity": 10,
+      "status": "pending",
+      "reason": "Free distribution camp for seasonal fever patients in rural village center.",
+      "adminRemarks": "",
+      "requestDate": "2026-08-18T06:51:24.532Z",
+      "updatedAt": "2026-08-18T06:51:24.532Z"
+    },
+    {
+      "_id": "6a994b1e1af180c991b6bd65",
+      "status": "approved",
+      "medicine": "6a994b1e8c4bf5c19bdea7c5",
+      "requester": "66a000000000000000000003",
+      "quantity": 15,
+      "reason": "Emergency aid relief for community camp test verification.",
+      "createdAt": "2026-09-03T10:25:34.142Z",
+      "approvedAt": "2026-09-08T06:13:59.267Z",
+      "adminRemarks": "",
+      "updatedAt": "2026-09-08T06:13:59.267Z"
+    },
+    {
+      "_id": "6a994c0de9c7923158713dbc",
+      "status": "approved",
+      "medicine": "6a994c0d108cc4bf72b5704a",
+      "requester": "66a000000000000000000003",
+      "quantity": 15,
+      "reason": "Emergency aid relief for community camp test verification.",
+      "createdAt": "2026-09-03T10:29:33.522Z",
+      "approvedAt": "2026-09-03T10:29:33.596Z",
+      "adminRemarks": "Approved for urgent health distribution test.",
+      "updatedAt": "2026-09-03T10:29:33.596Z"
+    },
+    {
+      "_id": "6a9e56d65a6d35e62184518c",
+      "status": "pending",
+      "medicine": "66b000000000000000000003",
+      "requester": "66a000000000000000000003",
+      "quantity": 1,
+      "reason": "Testing medicine request",
+      "createdAt": "2026-09-07T06:16:54.254Z"
+    },
+    {
+      "_id": "6a9e59baafa73dc185365826",
+      "status": "approved",
+      "medicine": "66b000000000000000000003",
+      "requester": "6a9e59bab4ab9ba0bc1caa90",
+      "quantity": 2,
+      "reason": "Required for ongoing fever and recovery at home",
+      "createdAt": "2026-09-07T06:29:14.799Z",
+      "approvedAt": "2026-09-07T06:29:15.141Z",
+      "adminRemarks": "Approved for patient home recovery",
+      "updatedAt": "2026-09-07T06:29:15.141Z"
+    },
+    {
+      "_id": "6a9e59baf646ac43e5190b39",
+      "status": "pending",
+      "medicine": "6a994b1e8c4bf5c19bdea7c5",
+      "requester": "6a9e59bac450ce8993b73cc4",
+      "quantity": 5,
+      "reason": "Free rural distribution medical camp in tribal colony",
+      "createdAt": "2026-09-07T06:29:14.836Z"
+    },
+    {
+      "_id": "6a9e59dabe3058fccb5d2562",
+      "status": "pending",
+      "medicine": "66b000000000000000000003",
+      "requester": "6a9e52703f2eeb89a6335700",
+      "quantity": 1,
+      "reason": "Testing request from Shimna account",
+      "createdAt": "2026-09-07T06:29:46.758Z"
+    },
+    {
+      "_id": "6a9e5bc17a9031b7110f0189",
+      "status": "pending",
+      "medicine": "66b000000000000000000003",
+      "requester": "6a9e53aadcbf5c9c256603cb",
+      "quantity": 23,
+      "reason": "public health distribution",
+      "createdAt": "2026-09-07T06:37:53.121Z"
+    }
+  ]
+}

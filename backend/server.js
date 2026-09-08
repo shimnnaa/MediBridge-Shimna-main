@@ -7,18 +7,6 @@ const User = require('./models/User');
 // Load environment variables
 dotenv.config();
 
-// Connect to Database
-connectDB();
-
-const app = express();
-
-// Middleware
-app.use(cors({
-  origin: '*', // For local dev, allow any origin. Can restrict in production.
-  credentials: true,
-}));
-app.use(express.json());
-
 // Seeding function for default admin
 const seedAdmin = async () => {
   try {
@@ -45,8 +33,19 @@ const seedAdmin = async () => {
   }
 };
 
-// Seed admin right after database connection is established
-seedAdmin();
+// Initialize DB and Admin Seeding
+connectDB().then(() => {
+  seedAdmin();
+});
+
+const app = express();
+
+// Middleware
+app.use(cors({
+  origin: '*', // For local dev, allow any origin. Can restrict in production.
+  credentials: true,
+}));
+app.use(express.json());
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
