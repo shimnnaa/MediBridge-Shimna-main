@@ -135,7 +135,7 @@ const Home = () => {
                     onClick={() => handleQuickFill('ngo')}
                     style={styles.roleFillBtn}
                   >
-                    🏥 NGO
+                    🏥 Beneficiary / NGO
                   </button>
                 </div>
               </div>

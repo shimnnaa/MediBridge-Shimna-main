@@ -43,11 +43,23 @@ const registerUser = async (req, res) => {
       address,
     };
 
-    // If beneficiary or NGO, add specific fields and set status to pending awaiting admin approval
-    if (role === 'beneficiary' || role === 'ngo') {
-      userData.organizationName = organizationName || '';
-      userData.registrationNumber = registrationNumber || '';
-      userData.website = website || '';
+    // If NGO, organization name and registration number are mandatory
+    if (role === 'ngo') {
+      if (!organizationName || !registrationNumber) {
+        return res.status(400).json({
+          success: false,
+          message: 'Organization name and NGO registration number are mandatory for NGO registration.',
+        });
+      }
+      userData.organizationName = organizationName.trim();
+      userData.registrationNumber = registrationNumber.trim();
+      userData.website = website ? website.trim() : '';
+      userData.status = 'pending';
+    } else if (role === 'beneficiary') {
+      // Individual beneficiary: organization details not mandatory
+      userData.organizationName = organizationName ? organizationName.trim() : '';
+      userData.registrationNumber = registrationNumber ? registrationNumber.trim() : '';
+      userData.website = website ? website.trim() : '';
       userData.status = 'pending';
     }
 

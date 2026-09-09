@@ -169,6 +169,34 @@
       "registrationNumber": "NGO-KL-2026-99",
       "website": "https://mercycare.org",
       "createdAt": "2026-09-07T06:29:14.488Z"
+    },
+    {
+      "_id": "6a9fdf7419d0c93c3a7c51c9",
+      "status": "pending",
+      "name": "shimnnaa",
+      "email": "shimnnaa@gmail.com",
+      "password": "$2b$10$RsxduK5U19RQ5is7aO5kfO5q.dWdLT3xlLTuSbvnxcAwsSlBCvcQ2",
+      "role": "beneficiary",
+      "phone": "0987654321",
+      "address": "Perinthalmanna",
+      "organizationName": "",
+      "registrationNumber": "",
+      "website": "",
+      "createdAt": "2026-09-08T10:12:04.787Z"
+    },
+    {
+      "_id": "6a9fe4766840f3baf5a0521c",
+      "status": "pending",
+      "name": "hisana",
+      "email": "hisana@gmail.com",
+      "password": "$2b$10$1S8MjgtdCo5oJhQ1sko2iulszM9chL4AEpP3moN0vlTY55S4teTne",
+      "role": "beneficiary",
+      "phone": "0987654321",
+      "address": "Perinthalmanna",
+      "organizationName": "",
+      "registrationNumber": "",
+      "website": "",
+      "createdAt": "2026-09-08T10:33:26.645Z"
     }
   ],
   "medicines": [
@@ -631,6 +659,16 @@
       "quantity": 23,
       "reason": "public health distribution",
       "createdAt": "2026-09-07T06:37:53.121Z"
+    },
+    {
+      "_id": "6a9fe4e100145808ce41999c",
+      "status": "pending",
+      "medicine": "66b000000000000000000002",
+      "requester": "6a9fe4766840f3baf5a0521c",
+      "quantity": 30,
+      "reason": "myself",
+      "requestDate": "2026-09-08T10:35:13.675Z",
+      "createdAt": "2026-09-08T10:35:13.675Z"
     }
   ]
 }

@@ -101,10 +101,10 @@ const Register = () => {
       return;
     }
 
-    // Role specific validation
+    // Role specific validation: Organization details MANDATORY ONLY for NGO
     if (role === 'ngo') {
       if (!organizationName || !registrationNumber) {
-        setError('Please provide organization name and registration credentials for NGO verification.');
+        setError('Organization Name and NGO Registration Number are mandatory for NGO registration.');
         return;
       }
     }
@@ -113,18 +113,18 @@ const Register = () => {
       name,
       email,
       password,
-      role,
+      role: role, // 'donor', 'beneficiary', or 'ngo'
       phone,
       address,
       ...(role === 'ngo' && {
-        organizationName,
-        registrationNumber,
-        website,
+        organizationName: organizationName.trim(),
+        registrationNumber: registrationNumber.trim(),
+        website: website ? website.trim() : '',
       }),
-      ...(role === 'beneficiary' && organizationName && {
-        organizationName,
-        registrationNumber,
-        website,
+      ...(role === 'beneficiary' && {
+        organizationName: organizationName ? organizationName.trim() : '',
+        registrationNumber: registrationNumber ? registrationNumber.trim() : '',
+        website: website ? website.trim() : '',
       }),
     };
 
@@ -154,7 +154,7 @@ const Register = () => {
           <p style={styles.subtitle}>Join MediBridge to start contributing or receiving medicines</p>
         </div>
 
-        {/* Role Toggles */}
+        {/* Role Toggles - Main Category */}
         <div style={styles.roleTabs}>
           <button
             type="button"
@@ -174,31 +174,65 @@ const Register = () => {
             type="button"
             style={{
               ...styles.tabBtn,
-              ...(role === 'beneficiary' ? styles.activeTab : {}),
+              ...(role !== 'donor' ? styles.activeTab : {}),
             }}
             onClick={() => {
-              setRole('beneficiary');
+              if (role === 'donor') setRole('beneficiary');
               setError('');
             }}
             disabled={loading}
           >
-            <HeartHandshake size={16} /> Beneficiary (Patient)
-          </button>
-          <button
-            type="button"
-            style={{
-              ...styles.tabBtn,
-              ...(role === 'ngo' ? styles.activeTab : {}),
-            }}
-            onClick={() => {
-              setRole('ngo');
-              setError('');
-            }}
-            disabled={loading}
-          >
-            <Building size={16} /> NGO / Organization
+            <Building size={16} /> Beneficiary / NGO
           </button>
         </div>
+
+        {/* First choose whether Beneficiary or NGO! */}
+        {role !== 'donor' && (
+          <div style={styles.entitySelectorBox} className="animate-fade-in">
+            <label style={styles.entitySelectorLabel}>
+              Are you an Individual Beneficiary or a Registered NGO? *
+            </label>
+            <div style={styles.entityButtonsRow}>
+              <button
+                type="button"
+                style={{
+                  ...styles.entityBtn,
+                  ...(role === 'beneficiary' ? styles.activeEntityBtn : {}),
+                }}
+                onClick={() => {
+                  setRole('beneficiary');
+                  setError('');
+                }}
+                disabled={loading}
+              >
+                <HeartHandshake size={20} color={role === 'beneficiary' ? 'var(--primary)' : 'var(--text-muted)'} />
+                <div style={{ textAlign: 'left' }}>
+                  <strong>Individual Beneficiary</strong>
+                  <span style={styles.entityBtnSub}>Patient / Personal healthcare need (No organization details required)</span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                style={{
+                  ...styles.entityBtn,
+                  ...(role === 'ngo' ? styles.activeEntityBtn : {}),
+                }}
+                onClick={() => {
+                  setRole('ngo');
+                  setError('');
+                }}
+                disabled={loading}
+              >
+                <Building size={20} color={role === 'ngo' ? 'var(--primary)' : 'var(--text-muted)'} />
+                <div style={{ textAlign: 'left' }}>
+                  <strong>Registered NGO / Trust</strong>
+                  <span style={styles.entityBtnSub}>Organization details & registration number mandatory</span>
+                </div>
+              </button>
+            </div>
+          </div>
+        )}
 
         {error && <div style={styles.errorAlert}>{error}</div>}
         {success && <div style={styles.successAlert}>{success}</div>}
@@ -350,19 +384,24 @@ const Register = () => {
             </div>
           </div>
 
-          {/* NGO Specific Verification Fields */}
+          {/* NGO Organization Details - STRICTLY MANDATORY ONLY FOR NGO */}
           {role === 'ngo' && (
             <div style={styles.ngoSection} className="animate-fade-in">
-              <h3 style={styles.formSectionTitle}>NGO Verification Details</h3>
+              <div style={styles.sectionHeaderWrap}>
+                <h3 style={styles.formSectionTitle}>Registered NGO / Trust Details</h3>
+                <span style={styles.mandatoryBadge}>* Mandatory for NGO</span>
+              </div>
               
               <div className="form-group">
-                <label htmlFor="orgName">Organization Name *</label>
+                <label htmlFor="orgName">
+                  Organization / Trust Name <span style={{ color: 'var(--status-rejected)' }}>*</span>
+                </label>
                 <div style={styles.inputWrapper}>
                   <Building size={16} style={styles.inputIcon} />
                   <input
                     id="orgName"
                     type="text"
-                    placeholder="Welfare Foundation NGO"
+                    placeholder="e.g. Hope Care Health Mission"
                     value={organizationName}
                     onChange={(e) => setOrganizationName(e.target.value)}
                     className="form-control"
@@ -375,13 +414,15 @@ const Register = () => {
 
               <div className="grid grid-cols-2" style={{ gap: '14px' }}>
                 <div className="form-group">
-                  <label htmlFor="regNum">NGO Registration # *</label>
+                  <label htmlFor="regNum">
+                    NGO Registration Number <span style={{ color: 'var(--status-rejected)' }}>*</span>
+                  </label>
                   <div style={styles.inputWrapper}>
                     <FileText size={16} style={styles.inputIcon} />
                     <input
                       id="regNum"
                       type="text"
-                      placeholder="REG-987654"
+                      placeholder="e.g. REG-987654 / Trust ID"
                       value={registrationNumber}
                       onChange={(e) => setRegistrationNumber(e.target.value)}
                       className="form-control"
@@ -413,8 +454,25 @@ const Register = () => {
               <div style={styles.infoBox}>
                 <Building size={18} color="var(--primary)" />
                 <p style={styles.infoText}>
-                  Verified NGO organizations can browse surplus unexpired medicine batches and submit requisition orders for healthcare clinics and community relief camps.
+                  Registered NGO accounts require administrator manual verification. Once approved by admin, you will be able to view donor contact details and request surplus medicines for your mission.
                 </p>
+              </div>
+            </div>
+          )}
+
+          {/* Individual Beneficiary - No Organization Details Required */}
+          {role === 'beneficiary' && (
+            <div style={styles.beneficiaryNotice} className="animate-fade-in">
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                <HeartHandshake size={22} color="var(--primary)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <div>
+                  <h4 style={{ margin: 0, fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                    Individual Beneficiary Account
+                  </h4>
+                  <p style={{ margin: '4px 0 0 0', fontSize: '0.84rem', color: 'var(--text-muted)', lineHeight: '1.45' }}>
+                    As an individual patient, <strong>no organization details or NGO registration numbers are required</strong>. Simply submit your basic contact information to proceed.
+                  </p>
+                </div>
               </div>
             </div>
           )}
@@ -511,6 +569,48 @@ const styles = {
     color: 'var(--primary)',
     boxShadow: 'var(--shadow-sm)',
   },
+  entitySelectorBox: {
+    background: 'hsl(168, 40%, 98%)',
+    border: '1.5px solid rgba(15, 165, 124, 0.3)',
+    borderRadius: '12px',
+    padding: '14px 16px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+  },
+  entitySelectorLabel: {
+    fontSize: '0.88rem',
+    fontWeight: 700,
+    color: 'var(--text-main)',
+  },
+  entityButtonsRow: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: '10px',
+  },
+  entityBtn: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '10px',
+    padding: '12px 14px',
+    background: '#ffffff',
+    border: '1.5px solid var(--border-color)',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    transition: 'var(--transition)',
+  },
+  activeEntityBtn: {
+    borderColor: 'var(--primary)',
+    background: 'var(--primary-light)',
+    boxShadow: '0 0 0 2px rgba(15, 165, 124, 0.2)',
+  },
+  entityBtnSub: {
+    display: 'block',
+    fontSize: '0.74rem',
+    color: 'var(--text-muted)',
+    marginTop: '2px',
+    fontWeight: 500,
+  },
   errorAlert: {
     background: 'var(--status-rejected-bg)',
     color: 'var(--status-rejected)',
@@ -556,10 +656,33 @@ const styles = {
     paddingLeft: '42px',
     width: '100%',
   },
+  sectionHeaderWrap: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderBottom: '1px solid var(--border-color)',
+    paddingBottom: '6px',
+    marginTop: '10px',
+  },
+  mandatoryBadge: {
+    fontSize: '0.72rem',
+    fontWeight: 700,
+    background: 'rgba(220, 53, 69, 0.1)',
+    color: 'var(--status-rejected)',
+    padding: '3px 8px',
+    borderRadius: '6px',
+    border: '1px solid rgba(220, 53, 69, 0.25)',
+  },
   ngoSection: {
     display: 'flex',
     flexDirection: 'column',
     gap: '18px',
+  },
+  beneficiaryNotice: {
+    background: 'hsl(168, 45%, 97%)',
+    border: '1px solid rgba(15, 165, 124, 0.25)',
+    borderRadius: '10px',
+    padding: '14px 16px',
   },
   otpCard: {
     background: 'hsl(168, 50%, 98%)',
