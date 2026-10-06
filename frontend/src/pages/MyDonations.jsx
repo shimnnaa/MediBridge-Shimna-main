@@ -14,7 +14,10 @@ import {
   FileText,
   ShieldCheck,
   Package,
-  Building2
+  Building2,
+  PackageCheck,
+  AlertCircle,
+  Clock,
 } from 'lucide-react';
 
 const MyDonations = () => {
@@ -24,9 +27,66 @@ const MyDonations = () => {
   const [activeTab, setActiveTab] = useState('donations'); // 'donations' | 'allocations'
   const [selectedMedModal, setSelectedMedModal] = useState(null);
 
+  // Donor collection modal state
+  const [donorCollectAlloc, setDonorCollectAlloc] = useState(null);
+  const [donorCollecting, setDonorCollecting] = useState(false);
+  const [donorCollectError, setDonorCollectError] = useState('');
+  const [donorCollectSuccess, setDonorCollectSuccess] = useState('');
+
   useEffect(() => {
     fetchData();
   }, []);
+
+  const handleOpenDonorCollectModal = (alloc) => {
+    setDonorCollectAlloc(alloc);
+    setDonorCollectError('');
+    setDonorCollectSuccess('');
+  };
+
+  const handleCloseDonorCollectModal = () => {
+    setDonorCollectAlloc(null);
+    setDonorCollectError('');
+    setDonorCollectSuccess('');
+  };
+
+  const handleConfirmDonorCollection = async () => {
+    if (!donorCollectAlloc) return;
+    setDonorCollecting(true);
+    setDonorCollectError('');
+    setDonorCollectSuccess('');
+
+    try {
+      const response = await api(`/requests/${donorCollectAlloc._id}/collect`, {
+        method: 'PUT',
+      });
+
+      if (response.success) {
+        setDonorCollectSuccess('Medicine handover confirmed! Stock quantity reduced from medicine collection.');
+        await fetchData();
+
+        // If selectedMedModal is open, refresh it as well
+        if (selectedMedModal) {
+          const updatedDonRes = await api('/medicines/my-donations');
+          if (updatedDonRes.success && updatedDonRes.data) {
+            const found = updatedDonRes.data.find((d) => String(d._id) === String(selectedMedModal._id));
+            if (found) {
+              setSelectedMedModal(found);
+            }
+          }
+        }
+
+        setTimeout(() => {
+          handleCloseDonorCollectModal();
+        }, 1800);
+      } else {
+        setDonorCollectError(response.message || 'Failed to update collection status.');
+      }
+    } catch (err) {
+      setDonorCollectError(err.message || 'Error occurred while confirming collection.');
+    } finally {
+      setDonorCollecting(false);
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -171,11 +231,12 @@ const MyDonations = () => {
                               <button
                                 onClick={() => setSelectedMedModal(med)}
                                 style={styles.viewBeneficiaryBtn}
-                                title="Click to view approved NGO details"
+                                title="Click to view approved NGO details and update collection"
                               >
                                 <CheckCircle2 size={15} color="var(--status-approved)" />
                                 <span>
                                   {med.recipientCount} NGO Approved ({med.totalAllocatedQuantity} units)
+                                  {med.collectedCount > 0 && ` • ${med.collectedCount} Collected`}
                                 </span>
                               </button>
                             ) : med.status === 'approved' ? (
@@ -242,7 +303,7 @@ const MyDonations = () => {
                       <th>Allocated Qty</th>
                       <th>Approved Date</th>
                       <th>Stated Purpose / Clinical Reason</th>
-                      <th>Status</th>
+                      <th>Collection Status & Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -298,9 +359,30 @@ const MyDonations = () => {
                           )}
                         </td>
                         <td>
-                          <span className="status-badge approved">
-                            ADMIN APPROVED
-                          </span>
+                          {alloc.status === 'collected' ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                              <span className="status-badge approved" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                                <CheckCircle2 size={13} /> COLLECTED
+                              </span>
+                              <span style={{ fontSize: '0.73rem', color: 'var(--text-muted)' }}>
+                                Handed over on {alloc.collectedAt ? new Date(alloc.collectedAt).toLocaleDateString() : 'Done'}
+                              </span>
+                            </div>
+                          ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-start' }}>
+                              <span style={styles.pendingPickupBadge}>
+                                <Clock size={12} /> Awaiting Pickup
+                              </span>
+                              <button
+                                onClick={() => handleOpenDonorCollectModal(alloc)}
+                                style={styles.donorCollectBtn}
+                                title="Click to update when medicine has been collected / handed over"
+                              >
+                                <PackageCheck size={14} />
+                                <span>Mark as Collected</span>
+                              </button>
+                            </div>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -378,11 +460,29 @@ const MyDonations = () => {
                           )}
                         </div>
 
-                        <div style={styles.approvedQtyTag}>
-                          <span style={{ fontSize: '0.75rem', textTransform: 'uppercase' }}>Approved Qty</span>
-                          <strong style={{ fontSize: '1.2rem', color: 'var(--status-approved)' }}>
-                            {alloc.quantity} units
-                          </strong>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
+                          <div style={styles.approvedQtyTag}>
+                            <span style={{ fontSize: '0.75rem', textTransform: 'uppercase' }}>
+                              {alloc.status === 'collected' ? 'Collected Qty' : 'Approved Qty'}
+                            </span>
+                            <strong style={{ fontSize: '1.2rem', color: 'var(--status-approved)' }}>
+                              {alloc.quantity} units
+                            </strong>
+                          </div>
+                          {alloc.status === 'collected' ? (
+                            <span className="status-badge approved" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.74rem' }}>
+                              <CheckCircle2 size={12} /> Handed Over & Collected
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => handleOpenDonorCollectModal(alloc)}
+                              style={styles.donorCollectBtn}
+                              title="Update collection status when medicines are collected and taken"
+                            >
+                              <PackageCheck size={13} />
+                              <span>Mark as Collected</span>
+                            </button>
+                          )}
                         </div>
                       </div>
 
@@ -465,6 +565,93 @@ const MyDonations = () => {
                 <button onClick={() => setSelectedMedModal(null)} className="btn btn-secondary">
                   Close
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL: Donor Confirm Medicine Collection / Handover */}
+        {donorCollectAlloc && (
+          <div style={styles.modalOverlay} onClick={handleCloseDonorCollectModal}>
+            <div style={styles.modalContent} onClick={(e) => e.stopPropagation()} className="card animate-fade-in">
+              <div style={styles.modalHeader}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <PackageCheck size={22} color="var(--primary)" />
+                  <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800 }}>Confirm Medicine Handover & Collection</h3>
+                </div>
+                <button onClick={handleCloseDonorCollectModal} style={styles.closeBtn} disabled={donorCollecting} aria-label="Close modal">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div style={styles.modalBody}>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '14px' }}>
+                  Please confirm that the beneficiary organization has collected these medicines. Once confirmed, this quantity will be deducted from your medicine collection.
+                </p>
+
+                <div style={styles.modalSummaryStrip}>
+                  <div>
+                    <span style={styles.stripLabel}>Medicine</span>
+                    <strong>{donorCollectAlloc.medicine?.name || 'Medicine'}</strong>
+                  </div>
+                  <div>
+                    <span style={styles.stripLabel}>Handover Quantity</span>
+                    <strong style={{ color: 'var(--primary)' }}>{donorCollectAlloc.quantity} units</strong>
+                  </div>
+                  <div>
+                    <span style={styles.stripLabel}>Batch</span>
+                    <code>{donorCollectAlloc.medicine?.batchNumber || 'N/A'}</code>
+                  </div>
+                </div>
+
+                <div style={{ background: 'hsl(210, 20%, 98%)', padding: '12px 14px', borderRadius: '8px', border: '1px solid var(--border-color)', marginTop: '12px' }}>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, marginBottom: '4px' }}>
+                    Recipient Organization
+                  </div>
+                  <strong style={{ fontSize: '0.95rem', color: 'var(--text-main)', display: 'block' }}>
+                    {donorCollectAlloc.requester?.organizationName || donorCollectAlloc.requester?.name || 'Verified NGO'}
+                  </strong>
+                  {donorCollectAlloc.requester?.phone && (
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                      Contact: {donorCollectAlloc.requester.name} ({donorCollectAlloc.requester.phone})
+                    </div>
+                  )}
+                </div>
+
+                {donorCollectError && (
+                  <div style={{ ...styles.errorAlert, marginTop: '12px' }}>
+                    <AlertCircle size={16} />
+                    <span>{donorCollectError}</span>
+                  </div>
+                )}
+
+                {donorCollectSuccess && (
+                  <div style={{ ...styles.successAlert, marginTop: '12px' }}>
+                    <CheckCircle2 size={16} />
+                    <span>{donorCollectSuccess}</span>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '16px' }}>
+                  <button
+                    type="button"
+                    onClick={handleCloseDonorCollectModal}
+                    className="btn btn-secondary"
+                    disabled={donorCollecting}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleConfirmDonorCollection}
+                    className="btn btn-primary"
+                    disabled={donorCollecting || donorCollectSuccess}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <PackageCheck size={16} />
+                    {donorCollecting ? 'Updating...' : 'Yes, Confirm Handover & Collected'}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -829,6 +1016,65 @@ const styles = {
     paddingTop: '16px',
     display: 'flex',
     justifyContent: 'flex-end',
+  },
+  pendingPickupBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px',
+    background: 'var(--status-pending-bg)',
+    color: '#b45309',
+    fontSize: '0.74rem',
+    fontWeight: 700,
+    padding: '3px 8px',
+    borderRadius: '6px',
+    border: '1px solid rgba(217, 119, 6, 0.2)',
+  },
+  donorCollectBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    background: 'var(--primary)',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '6px',
+    padding: '5px 10px',
+    fontSize: '0.78rem',
+    fontWeight: 700,
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    boxShadow: '0 2px 4px rgba(15, 165, 124, 0.25)',
+  },
+  collectedBadgeWrap: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '2px',
+  },
+  modalBody: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+  },
+  errorAlert: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    background: 'var(--status-rejected-bg)',
+    color: 'var(--status-rejected)',
+    padding: '10px 14px',
+    borderRadius: '8px',
+    fontSize: '0.85rem',
+    fontWeight: 600,
+  },
+  successAlert: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    background: 'var(--status-approved-bg)',
+    color: 'var(--status-approved)',
+    padding: '10px 14px',
+    borderRadius: '8px',
+    fontSize: '0.85rem',
+    fontWeight: 600,
   },
 };
 

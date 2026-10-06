@@ -65,7 +65,7 @@ const getMyDonations = async (req, res) => {
     let approvedRequests = [];
 
     if (medicineIds.length > 0) {
-      const allApproved = await Request.find({ status: 'approved' })
+      const allApproved = await Request.find({ status: { $in: ['approved', 'collected'] } })
         .populate('requester', 'name email phone address organizationName registrationNumber website role');
 
       approvedRequests = allApproved.filter((r) => {
@@ -78,7 +78,7 @@ const getMyDonations = async (req, res) => {
       const med = medDoc.toObject ? medDoc.toObject() : { ...medDoc };
       const medIdStr = String(med._id);
 
-      // Filter requests specifically approved by admin for this medicine
+      // Filter requests specifically approved or collected for this medicine
       const medAllocations = approvedRequests
         .filter((r) => {
           const reqMedId = r.medicine && r.medicine._id ? String(r.medicine._id) : String(r.medicine);
@@ -90,8 +90,12 @@ const getMyDonations = async (req, res) => {
             _id: rObj._id,
             quantity: rObj.quantity,
             reason: rObj.reason,
+            status: rObj.status,
             adminRemarks: rObj.adminRemarks || '',
             approvedAt: rObj.approvedAt || rObj.updatedAt || rObj.createdAt,
+            collectedAt: rObj.collectedAt || null,
+            collectionConfirmedBy: rObj.collectionConfirmedBy || null,
+            collectionNotes: rObj.collectionNotes || '',
             requestDate: rObj.requestDate || rObj.createdAt,
             requester: rObj.requester || null,
           };
@@ -100,6 +104,9 @@ const getMyDonations = async (req, res) => {
       med.approvedAllocations = medAllocations;
       med.totalAllocatedQuantity = medAllocations.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
       med.recipientCount = medAllocations.length;
+      med.collectedAllocations = medAllocations.filter((a) => a.status === 'collected');
+      med.collectedQuantity = med.collectedAllocations.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
+      med.collectedCount = med.collectedAllocations.length;
 
       return med;
     });

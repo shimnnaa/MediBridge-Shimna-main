@@ -386,6 +386,9 @@ const wrapDoc = (doc, collectionName) => {
     if (cleanDoc.donor && typeof cleanDoc.donor === 'object' && cleanDoc.donor._id) {
       cleanDoc.donor = String(cleanDoc.donor._id);
     }
+    if (cleanDoc.collectedBy && typeof cleanDoc.collectedBy === 'object' && cleanDoc.collectedBy._id) {
+      cleanDoc.collectedBy = String(cleanDoc.collectedBy._id);
+    }
 
     if (index !== -1) {
       list[index] = cleanDoc;

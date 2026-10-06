@@ -1,27 +1,84 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../utils/api';
-import { ArrowLeft, Clock, Phone, Mail, User, MapPin, ShieldCheck, Lock } from 'lucide-react';
+import {
+  ArrowLeft,
+  Clock,
+  Phone,
+  Mail,
+  User,
+  MapPin,
+  ShieldCheck,
+  Lock,
+  CheckCircle2,
+  PackageCheck,
+  AlertCircle,
+  X,
+} from 'lucide-react';
 
 const MyRequests = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [collectModalReq, setCollectModalReq] = useState(null);
+  const [collecting, setCollecting] = useState(false);
+  const [collectError, setCollectError] = useState('');
+  const [collectSuccess, setCollectSuccess] = useState('');
+
+  const fetchRequests = async () => {
+    try {
+      const response = await api('/requests/my-requests');
+      if (response.success && response.data) {
+        setRequests(response.data);
+      }
+    } catch (err) {
+      console.error('Error fetching my requests:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchRequests = async () => {
-      try {
-        const response = await api('/requests/my-requests');
-        if (response.success && response.data) {
-          setRequests(response.data);
-        }
-      } catch (err) {
-        console.error('Error fetching my requests:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchRequests();
   }, []);
+
+  const handleOpenCollectModal = (reqItem) => {
+    setCollectModalReq(reqItem);
+    setCollectError('');
+    setCollectSuccess('');
+  };
+
+  const handleCloseCollectModal = () => {
+    setCollectModalReq(null);
+    setCollectError('');
+    setCollectSuccess('');
+  };
+
+  const handleConfirmCollection = async () => {
+    if (!collectModalReq) return;
+    setCollecting(true);
+    setCollectError('');
+    setCollectSuccess('');
+
+    try {
+      const response = await api(`/requests/${collectModalReq._id}/collect`, {
+        method: 'PUT',
+      });
+
+      if (response.success) {
+        setCollectSuccess('Medicine collection confirmed! Stock has been updated in the medicine collection.');
+        await fetchRequests();
+        setTimeout(() => {
+          handleCloseCollectModal();
+        }, 1800);
+      } else {
+        setCollectError(response.message || 'Failed to update collection status.');
+      }
+    } catch (err) {
+      setCollectError(err.message || 'Error occurred while confirming collection.');
+    } finally {
+      setCollecting(false);
+    }
+  };
 
   return (
     <div style={styles.page} className="animate-fade-in">
@@ -61,6 +118,7 @@ const MyRequests = () => {
                     <th>Request Date</th>
                     <th>Status</th>
                     <th>Donor Contacts (After Admin Approval)</th>
+                    <th>Collection Action</th>
                     <th>Admin Remarks</th>
                   </tr>
                 </thead>
@@ -69,6 +127,8 @@ const MyRequests = () => {
                     const medicine = reqItem.medicine || {};
                     const donor = medicine.donor || {};
                     const isApproved = reqItem.status === 'approved';
+                    const isCollected = reqItem.status === 'collected';
+                    const isApprovedOrCollected = isApproved || isCollected;
                     const requestDateStr = reqItem.requestDate || reqItem.createdAt;
                     const formattedDate = requestDateStr ? new Date(requestDateStr).toLocaleDateString() : 'N/A';
 
@@ -80,12 +140,18 @@ const MyRequests = () => {
                         <td>{reqItem.quantity}</td>
                         <td>{formattedDate}</td>
                         <td>
-                          <span className={`status-badge ${reqItem.status || 'pending'}`}>
-                            {(reqItem.status || 'pending').toUpperCase()}
-                          </span>
+                          {isCollected ? (
+                            <span className="status-badge approved" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              <CheckCircle2 size={12} /> COLLECTED
+                            </span>
+                          ) : (
+                            <span className={`status-badge ${reqItem.status || 'pending'}`}>
+                              {(reqItem.status || 'pending').toUpperCase()}
+                            </span>
+                          )}
                         </td>
                         <td style={styles.contactCell}>
-                          {isApproved ? (
+                          {isApprovedOrCollected ? (
                             <div style={styles.donorInfoBox}>
                               <div style={styles.donorHeaderRow}>
                                 <ShieldCheck size={13} color="var(--primary)" />
@@ -130,6 +196,37 @@ const MyRequests = () => {
                             <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Not accessible (Request rejected)</span>
                           )}
                         </td>
+
+                        {/* Collection Action Column */}
+                        <td style={styles.actionCell}>
+                          {isApproved ? (
+                            <button
+                              onClick={() => handleOpenCollectModal(reqItem)}
+                              style={styles.collectBtn}
+                              title="Click to notify that you have collected this medicine"
+                            >
+                              <PackageCheck size={14} />
+                              <span>Mark as Collected</span>
+                            </button>
+                          ) : isCollected ? (
+                            <div style={styles.collectedTag}>
+                              <CheckCircle2 size={15} color="var(--status-approved)" />
+                              <div>
+                                <strong style={{ color: 'var(--status-approved)', display: 'block', fontSize: '0.82rem' }}>
+                                  Collected
+                                </strong>
+                                <span style={styles.collectedDateText}>
+                                  {reqItem.collectedAt ? new Date(reqItem.collectedAt).toLocaleDateString() : 'Done'}
+                                </span>
+                              </div>
+                            </div>
+                          ) : reqItem.status === 'pending' ? (
+                            <span style={styles.subtleText}>Awaiting Review</span>
+                          ) : (
+                            <span style={styles.subtleText}>-</span>
+                          )}
+                        </td>
+
                         <td style={styles.remarksCell}>
                           {reqItem.status === 'pending' && 'Awaiting administrative verification.'}
                           {reqItem.status === 'rejected' && (
@@ -138,12 +235,92 @@ const MyRequests = () => {
                             </span>
                           )}
                           {isApproved && (reqItem.adminRemarks || 'Approved. Please coordinate collection using donor contacts.')}
+                          {isCollected && 'Medicine successfully collected from donor.'}
                         </td>
                       </tr>
                     );
                   })}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {/* Modal to Confirm Medicine Collection */}
+        {collectModalReq && (
+          <div style={styles.modalBackdrop} onClick={handleCloseCollectModal}>
+            <div style={styles.modalContent} className="card animate-fade-in" onClick={(e) => e.stopPropagation()}>
+              <div style={styles.modalHeader}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <PackageCheck size={22} color="var(--primary)" />
+                  <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800 }}>Confirm Medicine Collection</h3>
+                </div>
+                <button onClick={handleCloseCollectModal} style={styles.closeBtn} disabled={collecting} aria-label="Close modal">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div style={styles.modalBody}>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '16px' }}>
+                  Please confirm that you have physically collected the approved medicines. This will notify the system and update the inventory in the medicine collection.
+                </p>
+
+                <div style={styles.modalSummaryBox}>
+                  <div style={styles.summaryItem}>
+                    <span style={styles.summaryLabel}>Medicine:</span>
+                    <strong>{collectModalReq.medicine?.name || 'Medicine'}</strong>
+                  </div>
+                  <div style={styles.summaryItem}>
+                    <span style={styles.summaryLabel}>Batch Number:</span>
+                    <code>{collectModalReq.medicine?.batchNumber || 'N/A'}</code>
+                  </div>
+                  <div style={styles.summaryItem}>
+                    <span style={styles.summaryLabel}>Quantity Collected:</span>
+                    <strong style={{ color: 'var(--primary)', fontSize: '1.05rem' }}>{collectModalReq.quantity} unit(s)</strong>
+                  </div>
+                  {collectModalReq.medicine?.donor && (
+                    <div style={styles.summaryItem}>
+                      <span style={styles.summaryLabel}>Donor:</span>
+                      <span>{collectModalReq.medicine.donor.name || 'Registered Donor'}</span>
+                    </div>
+                  )}
+                </div>
+
+                {collectError && (
+                  <div style={styles.errorAlert}>
+                    <AlertCircle size={16} />
+                    <span>{collectError}</span>
+                  </div>
+                )}
+
+                {collectSuccess && (
+                  <div style={styles.successAlert}>
+                    <CheckCircle2 size={16} />
+                    <span>{collectSuccess}</span>
+                  </div>
+                )}
+
+                <div style={styles.modalCta}>
+                  <button
+                    type="button"
+                    onClick={handleCloseCollectModal}
+                    className="btn btn-secondary"
+                    disabled={collecting}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleConfirmCollection}
+                    className="btn btn-primary"
+                    disabled={collecting || collectSuccess}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <PackageCheck size={16} />
+                    {collecting ? 'Confirming...' : 'Yes, Medicine Collected'}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -284,6 +461,134 @@ const styles = {
     color: 'var(--text-muted)',
     fontSize: '0.85rem',
     maxWidth: '260px',
+  },
+  actionCell: {
+    minWidth: '150px',
+  },
+  collectBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    background: 'var(--primary)',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '6px',
+    padding: '6px 12px',
+    fontSize: '0.82rem',
+    fontWeight: 700,
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    boxShadow: '0 2px 4px rgba(15, 165, 124, 0.25)',
+  },
+  collectedTag: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    background: 'var(--status-approved-bg)',
+    padding: '6px 10px',
+    borderRadius: '8px',
+    border: '1px solid rgba(40, 167, 69, 0.2)',
+  },
+  collectedDateText: {
+    fontSize: '0.72rem',
+    color: 'var(--text-muted)',
+    display: 'block',
+  },
+  subtleText: {
+    fontSize: '0.8rem',
+    color: 'var(--text-muted)',
+    fontStyle: 'italic',
+  },
+  // Modal styles
+  modalBackdrop: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'rgba(15, 23, 42, 0.5)',
+    backdropFilter: 'blur(4px)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+    padding: '20px',
+  },
+  modalContent: {
+    maxWidth: '480px',
+    width: '100%',
+    background: '#fff',
+    borderRadius: '16px',
+    padding: '24px',
+    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)',
+  },
+  modalHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderBottom: '1px solid var(--border-color)',
+    paddingBottom: '12px',
+    marginBottom: '16px',
+  },
+  closeBtn: {
+    background: 'transparent',
+    border: 'none',
+    color: 'var(--text-muted)',
+    cursor: 'pointer',
+    padding: '4px',
+    borderRadius: '6px',
+  },
+  modalBody: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '14px',
+  },
+  modalSummaryBox: {
+    background: 'hsl(210, 20%, 98%)',
+    border: '1px solid var(--border-color)',
+    borderRadius: '10px',
+    padding: '14px 16px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  },
+  summaryItem: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    fontSize: '0.88rem',
+  },
+  summaryLabel: {
+    color: 'var(--text-muted)',
+    fontWeight: 500,
+  },
+  modalCta: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    gap: '12px',
+    marginTop: '6px',
+  },
+  errorAlert: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    background: 'var(--status-rejected-bg)',
+    color: 'var(--status-rejected)',
+    padding: '10px 14px',
+    borderRadius: '8px',
+    fontSize: '0.85rem',
+    fontWeight: 600,
+  },
+  successAlert: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    background: 'var(--status-approved-bg)',
+    color: 'var(--status-approved)',
+    padding: '10px 14px',
+    borderRadius: '8px',
+    fontSize: '0.85rem',
+    fontWeight: 600,
   },
 };
 

@@ -14,6 +14,7 @@ import {
   FileText,
   Clock,
   CheckCircle2,
+  PackageCheck,
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -211,7 +212,7 @@ const DonorDashboard = ({ user }) => {
    2. BENEFICIARY / NGO DASHBOARD
    ========================================================================== */
 const BeneficiaryDashboard = ({ user }) => {
-  const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0 });
+  const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0, collected: 0 });
   const [recent, setRecent] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -227,8 +228,9 @@ const BeneficiaryDashboard = ({ user }) => {
           const total = list.length;
           const pending = list.filter(r => r.status === 'pending').length;
           const approved = list.filter(r => r.status === 'approved').length;
+          const collected = list.filter(r => r.status === 'collected').length;
           
-          setStats({ total, pending, approved });
+          setStats({ total, pending, approved, collected });
         }
       } catch (err) {
         console.error('Error fetching beneficiary dashboard data:', err);
@@ -309,6 +311,16 @@ const BeneficiaryDashboard = ({ user }) => {
           <div>
             <span style={styles.statLabel}>Approved Requests</span>
             <h3 style={styles.statNumber}>{stats.approved}</h3>
+          </div>
+        </div>
+
+        <div style={styles.statCard} className="card">
+          <div style={{ ...styles.statIconContainer, background: 'rgba(15, 165, 124, 0.15)', color: 'var(--primary)' }}>
+            <PackageCheck size={22} />
+          </div>
+          <div>
+            <span style={styles.statLabel}>Collected Items</span>
+            <h3 style={styles.statNumber}>{stats.collected}</h3>
           </div>
         </div>
       </div>
@@ -448,7 +460,9 @@ const AdminDashboard = () => {
               <div>
                 <span style={styles.statLabel}>Redistribution Requests</span>
                 <h3 style={styles.statNumber}>{stats.requests.totalRequests}</h3>
-                <span style={styles.subStats}>Pending approval: <strong style={{ color: 'var(--status-pending)' }}>{stats.requests.pendingRequests}</strong></span>
+                <span style={styles.subStats}>
+                  Pending: <strong style={{ color: 'var(--status-pending)' }}>{stats.requests.pendingRequests}</strong> • Collected: <strong style={{ color: 'var(--status-approved)' }}>{stats.requests.collectedRequests || 0}</strong>
+                </span>
               </div>
             </div>
           </div>

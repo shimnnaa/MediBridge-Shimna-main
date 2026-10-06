@@ -200,7 +200,7 @@ const AdminVerifyRequests = () => {
                 <div style={styles.stockNotice}>
                   <AlertCircle size={16} color="var(--primary)" />
                   <p style={{ fontSize: '0.82rem', color: 'hsl(162, 80%, 20%)' }}>
-                    Confirming approval will automatically decrement <strong>{selectedReq.quantity}</strong> units from the stock of <strong>{selectedReq.medicine?.name}</strong> and make donor contact details visible to the beneficiary NGO.
+                    Confirming approval will approve this request and make donor contact details visible to the beneficiary NGO for coordination. Stock will be deducted upon physical collection.
                   </p>
                 </div>
               )}

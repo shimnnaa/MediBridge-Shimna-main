@@ -23,7 +23,7 @@ const medicineSchema = new mongoose.Schema({
   quantity: {
     type: Number,
     required: [true, 'Please provide the quantity'],
-    min: [1, 'Quantity must be at least 1'],
+    min: [0, 'Quantity cannot be negative'],
   },
   originalQuantity: {
     type: Number,

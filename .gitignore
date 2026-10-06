@@ -29,3 +29,9 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw?
+
+# Documents and images
+*.docx
+*.pdf
+*.png
+

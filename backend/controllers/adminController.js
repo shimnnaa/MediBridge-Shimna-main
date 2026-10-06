@@ -24,6 +24,7 @@ const getDashboardStats = async (req, res) => {
     const totalRequests = await Request.countDocuments();
     const pendingRequests = await Request.countDocuments({ status: 'pending' });
     const approvedRequests = await Request.countDocuments({ status: 'approved' });
+    const collectedRequests = await Request.countDocuments({ status: 'collected' });
     const rejectedRequests = await Request.countDocuments({ status: 'rejected' });
 
     return res.status(200).json({
@@ -31,7 +32,7 @@ const getDashboardStats = async (req, res) => {
       data: {
         users: { totalUsers, donorCount, beneficiaryCount, pendingBeneficiaries },
         donations: { totalDonations, pendingDonations, approvedDonations, rejectedDonations, claimedDonations },
-        requests: { totalRequests, pendingRequests, approvedRequests, rejectedRequests },
+        requests: { totalRequests, pendingRequests, approvedRequests, collectedRequests, rejectedRequests },
       },
     });
   } catch (error) {
@@ -180,13 +181,6 @@ const verifyRequest = async (req, res) => {
           message: `Cannot approve request. Requested quantity (${request.quantity}) exceeds available stock (${medicine.quantity})`,
         });
       }
-
-      // Deduct quantity
-      medicine.quantity -= request.quantity;
-      if (medicine.quantity === 0) {
-        medicine.status = 'claimed';
-      }
-      await medicine.save();
 
       request.status = 'approved';
       request.approvedAt = new Date();

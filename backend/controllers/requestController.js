@@ -94,7 +94,7 @@ const getMyRequests = async (req, res) => {
         item.requestDate = item.createdAt;
       }
 
-      const isApproved = item.status === 'approved';
+      const isApproved = item.status === 'approved' || item.status === 'collected';
 
       if (item.medicine && typeof item.medicine === 'object') {
         const med = item.medicine.toObject ? item.medicine.toObject() : { ...item.medicine };
@@ -162,7 +162,7 @@ const getRequestById = async (req, res) => {
       item.requestDate = item.createdAt;
     }
 
-    const isApproved = item.status === 'approved';
+    const isApproved = item.status === 'approved' || item.status === 'collected';
     const canSeeDonorDetails = isAdmin || isDonor || isApproved;
 
     if (item.medicine && typeof item.medicine === 'object') {
@@ -214,8 +214,8 @@ const getDonorAllocations = async (req, res) => {
       });
     }
 
-    // 2. Find all approved requests
-    const allApprovedRequests = await Request.find({ status: 'approved' })
+    // 2. Find all approved & collected requests
+    const allApprovedRequests = await Request.find({ status: { $in: ['approved', 'collected'] } })
       .populate('requester', 'name email phone address organizationName registrationNumber website role')
       .sort({ approvedAt: -1, createdAt: -1 });
 
@@ -234,6 +234,9 @@ const getDonorAllocations = async (req, res) => {
           status: rObj.status,
           adminRemarks: rObj.adminRemarks || '',
           approvedAt: rObj.approvedAt || rObj.updatedAt || rObj.createdAt,
+          collectedAt: rObj.collectedAt || null,
+          collectionConfirmedBy: rObj.collectionConfirmedBy || null,
+          collectionNotes: rObj.collectionNotes || '',
           requestDate: rObj.requestDate || rObj.createdAt,
           requester: rObj.requester,
           medicine: {
@@ -261,9 +264,116 @@ const getDonorAllocations = async (req, res) => {
   }
 };
 
+// @desc    Mark an approved medicine request as collected
+// @route   PUT /api/requests/:id/collect
+// @access  Private (Requester Beneficiary, Medicine Donor, or Admin)
+const markRequestAsCollected = async (req, res) => {
+  try {
+    const { notes } = req.body || {};
+    const request = await Request.findById(req.params.id)
+      .populate('requester', 'name email phone organizationName')
+      .populate({
+        path: 'medicine',
+        populate: {
+          path: 'donor',
+          select: 'name email phone address',
+        },
+      });
+
+    if (!request) {
+      return res.status(404).json({ success: false, message: 'Medicine request not found' });
+    }
+
+    // Verify authorization
+    const requesterId = request.requester && (request.requester._id ? String(request.requester._id) : String(request.requester));
+    const medDonorId = request.medicine && request.medicine.donor && (request.medicine.donor._id ? String(request.medicine.donor._id) : String(request.medicine.donor));
+    const currentUserId = String(req.user._id);
+    const isAdmin = req.user.role === 'admin';
+    const isRequester = requesterId === currentUserId;
+    const isDonor = medDonorId === currentUserId;
+
+    if (!isRequester && !isDonor && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to mark this medicine request as collected.',
+      });
+    }
+
+    if (request.status === 'collected') {
+      return res.status(400).json({
+        success: false,
+        message: 'This medicine request has already been marked as collected.',
+      });
+    }
+
+    if (request.status !== 'approved') {
+      return res.status(400).json({
+        success: false,
+        message: `Only approved medicine requests can be marked as collected. Current status: ${request.status}`,
+      });
+    }
+
+    // Locate medicine to deduct quantity from medicine inventory collection
+    const medId = request.medicine && (request.medicine._id ? request.medicine._id : request.medicine);
+    const medicine = await Medicine.findById(medId);
+
+    if (!medicine) {
+      return res.status(404).json({
+        success: false,
+        message: 'The medicine referenced by this request was not found.',
+      });
+    }
+
+    // Reduce stock in medicine collection
+    const currentStock = Number(medicine.quantity) || 0;
+    const requestedQty = Number(request.quantity) || 0;
+    const newStock = Math.max(0, currentStock - requestedQty);
+
+    medicine.quantity = newStock;
+    if (newStock === 0) {
+      medicine.status = 'claimed';
+    }
+    await medicine.save();
+
+    // Identify who confirmed the collection
+    let confirmedBy = 'beneficiary';
+    if (isAdmin) {
+      confirmedBy = 'admin';
+    } else if (isDonor) {
+      confirmedBy = 'donor';
+    }
+
+    const now = new Date();
+    request.status = 'collected';
+    request.collectedAt = now;
+    request.collectedBy = req.user._id;
+    request.collectionConfirmedBy = confirmedBy;
+    if (notes) {
+      request.collectionNotes = String(notes).trim();
+    }
+    request.updatedAt = now;
+
+    await request.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Medicine collection confirmed successfully. Stock quantity has been reduced from medicine collection.',
+      data: {
+        request,
+        remainingMedicineStock: medicine.quantity,
+        medicineStatus: medicine.status,
+      },
+    });
+  } catch (error) {
+    console.error('Mark request collected error:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   requestMedicine,
   getMyRequests,
   getRequestById,
   getDonorAllocations,
+  markRequestAsCollected,
 };

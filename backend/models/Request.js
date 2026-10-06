@@ -18,7 +18,7 @@ const requestSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'approved', 'rejected'],
+    enum: ['pending', 'approved', 'rejected', 'collected'],
     default: 'pending',
   },
   reason: {
@@ -36,6 +36,21 @@ const requestSchema = new mongoose.Schema({
   },
   approvedAt: {
     type: Date,
+  },
+  collectedAt: {
+    type: Date,
+  },
+  collectedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  },
+  collectionConfirmedBy: {
+    type: String,
+    enum: ['beneficiary', 'donor', 'admin'],
+  },
+  collectionNotes: {
+    type: String,
+    trim: true,
   },
   updatedAt: {
     type: Date,
