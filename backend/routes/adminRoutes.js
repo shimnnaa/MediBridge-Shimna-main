@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   getDashboardStats,
   getAllDonations,
+  getDonationHistory,
   verifyDonation,
   getAllRequests,
   verifyRequest,
@@ -27,6 +28,7 @@ router.route('/profile')
 
 router.post('/validate-phone', validateAdminPhone);
 
+router.get('/donations/history', getDonationHistory);
 router.route('/donations')
   .get(getAllDonations);
 router.put('/donations/:id/verify', verifyDonation);

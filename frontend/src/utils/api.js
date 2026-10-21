@@ -22,6 +22,7 @@ const api = async (endpoint, options = {}) => {
   }
 
   try {
+    const method = (options.method || 'GET').toUpperCase();
     const response = await fetch(`${API_URL}${endpoint}`, config);
 
     const contentType = response.headers.get('content-type') || '';
@@ -30,11 +31,11 @@ const api = async (endpoint, options = {}) => {
     if (contentType.includes('application/json')) {
       data = await response.json();
     } else {
-      await response.text();
+      const text = await response.text();
       if (!response.ok) {
-        throw new Error(`Server returned HTTP ${response.status}: Please check backend logs.`);
+        throw new Error(`Server returned HTTP ${response.status} for [${method} ${endpoint}]: ${text || 'Please check backend logs.'}`);
       }
-      throw new Error(`Invalid server response format. Expected JSON, got ${contentType || 'text'}.`);
+      throw new Error(`Invalid server response format for [${method} ${endpoint}]. Expected JSON, got ${contentType || 'text'}.`);
     }
 
     if (!response.ok) {
@@ -43,7 +44,7 @@ const api = async (endpoint, options = {}) => {
         localStorage.removeItem('user');
         window.dispatchEvent(new Event('medibridge:logout'));
       }
-      throw new Error(data.message || `Request failed with status ${response.status}`);
+      throw new Error(data.message || `Request failed with status ${response.status} for [${method} ${endpoint}]`);
     }
 
     return data;

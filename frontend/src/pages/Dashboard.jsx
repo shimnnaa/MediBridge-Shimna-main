@@ -15,6 +15,7 @@ import {
   Clock,
   CheckCircle2,
   PackageCheck,
+  History,
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -522,6 +523,9 @@ const AdminDashboard = () => {
               <div style={styles.adminQuickLinks}>
                 <Link to="/admin/verify-donations" style={styles.quickLinkItem}>
                   <Heart size={18} /> Verify Medicine Records
+                </Link>
+                <Link to="/admin/donation-history" style={styles.quickLinkItem}>
+                  <History size={18} /> Successful Donation History
                 </Link>
                 <Link to="/admin/verify-requests" style={styles.quickLinkItem}>
                   <ClipboardList size={18} /> Approve / Reject Requests

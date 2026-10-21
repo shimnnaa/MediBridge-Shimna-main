@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Heart, LogOut, User, PlusCircle, Search, ClipboardList, ShieldAlert, Users, Menu, X, FileText } from 'lucide-react';
+import { Heart, LogOut, User, PlusCircle, Search, ClipboardList, ShieldAlert, Users, Menu, X, FileText, History } from 'lucide-react';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -64,6 +64,9 @@ const Navbar = () => {
                 <>
                   <Link to="/admin/verify-donations" style={styles.link}>
                     <ShieldAlert size={16} /> Verify Donations
+                  </Link>
+                  <Link to="/admin/donation-history" style={styles.link}>
+                    <History size={16} /> Donation History
                   </Link>
                   <Link to="/admin/verify-requests" style={styles.link}>
                     <ClipboardList size={16} /> Requests
@@ -141,6 +144,9 @@ const Navbar = () => {
                 <>
                   <Link to="/admin/verify-donations" style={styles.mobileLink} onClick={closeMenu}>
                     <ShieldAlert size={16} /> Verify Donations
+                  </Link>
+                  <Link to="/admin/donation-history" style={styles.mobileLink} onClick={closeMenu}>
+                    <History size={16} /> Donation History
                   </Link>
                   <Link to="/admin/verify-requests" style={styles.mobileLink} onClick={closeMenu}>
                     <ClipboardList size={16} /> Requests

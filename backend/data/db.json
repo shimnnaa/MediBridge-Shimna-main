@@ -244,11 +244,11 @@
       "manufacturer": "Cipla Ltd",
       "batchNumber": "CTZ-1022",
       "expiryDate": "2026-11-16T06:51:24.531Z",
-      "quantity": 2,
+      "quantity": 0,
       "originalQuantity": 25,
       "donor": "66a000000000000000000002",
       "condition": "Loose Strips",
-      "status": "approved",
+      "status": "claimed",
       "description": "Sealed strips, unexpired allergy relief medicine.",
       "createdAt": "2026-08-18T06:51:24.532Z",
       "verificationDetails": {
@@ -544,12 +544,12 @@
     },
     {
       "_id": "6a994b1e8c4bf5c19bdea7c5",
-      "status": "approved",
+      "status": "claimed",
       "name": "Amoxicillin Trihydrate 500mg (Test Batch)",
       "manufacturer": "Cipla Laboratories",
       "batchNumber": "TEST-BATCH-1788431134103",
       "expiryDate": "2027-01-01T00:00:00.000Z",
-      "quantity": 35,
+      "quantity": 0,
       "originalQuantity": 50,
       "donor": "66a000000000000000000002",
       "description": "Sealed blisters for community health clinic testing.",
@@ -705,7 +705,7 @@
     },
     {
       "_id": "6ab4ee6371ce5d289c410d6d",
-      "status": "approved",
+      "status": "collected",
       "medicine": "6a994b1e8c4bf5c19bdea7c5",
       "requester": "6a9e53aadcbf5c9c256603cb",
       "quantity": 35,
@@ -714,7 +714,36 @@
       "createdAt": "2026-09-24T09:33:23.111Z",
       "approvedAt": "2026-09-24T09:34:16.602Z",
       "adminRemarks": "",
-      "updatedAt": "2026-09-24T09:34:16.602Z"
+      "updatedAt": "2026-10-06T08:21:57.236Z",
+      "collectedAt": "2026-10-06T08:21:57.236Z",
+      "collectedBy": "6a9e53aadcbf5c9c256603cb",
+      "collectionConfirmedBy": "beneficiary"
+    },
+    {
+      "_id": "6ac4af1a1700e4299a8f5264",
+      "status": "pending",
+      "medicine": "6a848717d897c4c535d1e1c4",
+      "requester": "6a9e53aadcbf5c9c256603cb",
+      "quantity": 20,
+      "reason": "health care",
+      "requestDate": "2026-10-06T08:19:38.407Z",
+      "createdAt": "2026-10-06T08:19:38.407Z"
+    },
+    {
+      "_id": "6ac4afd76ef1b6f1f574c199",
+      "status": "collected",
+      "medicine": "66b000000000000000000003",
+      "requester": "6a9e53aadcbf5c9c256603cb",
+      "quantity": 2,
+      "reason": "gt",
+      "requestDate": "2026-10-06T08:22:47.829Z",
+      "createdAt": "2026-10-06T08:22:47.829Z",
+      "approvedAt": "2026-10-06T08:23:25.008Z",
+      "adminRemarks": "",
+      "updatedAt": "2026-10-06T08:24:18.493Z",
+      "collectedAt": "2026-10-06T08:24:18.493Z",
+      "collectedBy": "6a9e53aadcbf5c9c256603cb",
+      "collectionConfirmedBy": "beneficiary"
     }
   ]
 }

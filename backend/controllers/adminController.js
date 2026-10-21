@@ -49,7 +49,11 @@ const getAllDonations = async (req, res) => {
     const { status } = req.query;
     let query = {};
     if (status) {
-      query.status = status;
+      if (status.includes(',')) {
+        query.status = { $in: status.split(',').map((s) => s.trim()) };
+      } else {
+        query.status = status;
+      }
     }
 
     const donations = await Medicine.find(query)
@@ -63,6 +67,89 @@ const getAllDonations = async (req, res) => {
     });
   } catch (error) {
     console.error('Admin get all donations error:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get successful medicine donations history (approved/claimed with allocation history)
+// @route   GET /api/admin/donations/history
+// @access  Private (Admin only)
+const getDonationHistory = async (req, res) => {
+  try {
+    const { status } = req.query;
+    let query = {};
+
+    if (status && status !== 'all') {
+      query.status = status;
+    } else {
+      query.status = { $in: ['approved', 'claimed'] };
+    }
+
+    const donations = await Medicine.find(query)
+      .populate('donor', 'name email phone address')
+      .sort({ createdAt: -1 });
+
+    const medicineIds = donations.map((d) => String(d._id));
+    let approvedRequests = [];
+
+    if (medicineIds.length > 0) {
+      const allApproved = await Request.find({ status: { $in: ['approved', 'collected'] } })
+        .populate('requester', 'name email phone address organizationName registrationNumber website role');
+
+      approvedRequests = allApproved.filter((r) => {
+        const reqMedId = r.medicine && r.medicine._id ? String(r.medicine._id) : String(r.medicine);
+        return medicineIds.includes(reqMedId);
+      });
+    }
+
+    const enhancedDonations = donations.map((medDoc) => {
+      const med = medDoc.toObject ? medDoc.toObject() : { ...medDoc };
+      const medIdStr = String(med._id);
+
+      const allocations = approvedRequests
+        .filter((r) => {
+          const reqMedId = r.medicine && r.medicine._id ? String(r.medicine._id) : String(r.medicine);
+          return reqMedId === medIdStr;
+        })
+        .map((r) => {
+          const rObj = r.toObject ? r.toObject() : { ...r };
+          return {
+            _id: rObj._id,
+            quantity: rObj.quantity,
+            reason: rObj.reason,
+            status: rObj.status,
+            adminRemarks: rObj.adminRemarks || '',
+            approvedAt: rObj.approvedAt || rObj.updatedAt || rObj.createdAt,
+            collectedAt: rObj.collectedAt || null,
+            collectionConfirmedBy: rObj.collectionConfirmedBy || null,
+            collectionNotes: rObj.collectionNotes || '',
+            requestDate: rObj.requestDate || rObj.createdAt,
+            requester: rObj.requester || null,
+          };
+        });
+
+      const rawClaimed = allocations.reduce((sum, item) => sum + (item.quantity || 0), 0);
+      const origQty = med.originalQuantity !== undefined && med.originalQuantity > 0 ? med.originalQuantity : (med.quantity || 0);
+      const totalClaimedQuantity = Math.min(origQty, rawClaimed);
+      const remQty = med.status === 'claimed' ? 0 : Math.max(0, origQty - totalClaimedQuantity);
+
+      return {
+        ...med,
+        originalQuantity: origQty,
+        quantity: remQty,
+        allocations,
+        totalClaimedQuantity,
+        claimCount: allocations.length,
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      count: enhancedDonations.length,
+      data: enhancedDonations,
+    });
+  } catch (error) {
+    console.error('Admin get donation history error:', error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -165,6 +252,8 @@ const verifyRequest = async (req, res) => {
       });
     }
 
+    let autoRejectedCount = 0;
+
     if (status === 'approved') {
       // Double check medicine stock and validity
       if (medicine.status !== 'approved' && medicine.status !== 'claimed') {
@@ -184,6 +273,36 @@ const verifyRequest = async (req, res) => {
 
       request.status = 'approved';
       request.approvedAt = new Date();
+
+      // Deduct stock from medicine inventory
+      const currentStock = Number(medicine.quantity) || 0;
+      const approvedQty = Number(request.quantity) || 0;
+      const newStock = Math.max(0, currentStock - approvedQty);
+
+      medicine.quantity = newStock;
+      if (newStock === 0) {
+        medicine.status = 'claimed';
+      }
+      await medicine.save();
+
+      // Automatically reject remaining pending requests that exceed newly available stock
+      const pendingRequestsForMed = await Request.find({ status: 'pending' });
+
+      for (const otherReq of pendingRequestsForMed) {
+        const otherMedId = otherReq.medicine && otherReq.medicine._id ? String(otherReq.medicine._id) : String(otherReq.medicine);
+        if (otherMedId === String(medId) && String(otherReq._id) !== String(request._id)) {
+          const reqQty = Number(otherReq.quantity) || 0;
+          if (newStock === 0 || reqQty > newStock) {
+            otherReq.status = 'rejected';
+            otherReq.adminRemarks = newStock === 0
+              ? 'Auto-rejected by system: Stock fully allocated and claimed.'
+              : `Auto-rejected by system: Requested quantity (${reqQty}) exceeds remaining stock (${newStock}).`;
+            otherReq.updatedAt = new Date();
+            await otherReq.save();
+            autoRejectedCount++;
+          }
+        }
+      }
     } else {
       request.status = 'rejected';
     }
@@ -192,9 +311,14 @@ const verifyRequest = async (req, res) => {
     request.updatedAt = new Date();
     await request.save();
 
+    let successMsg = `Request has been ${status} successfully.`;
+    if (autoRejectedCount > 0) {
+      successMsg += ` (${autoRejectedCount} other request(s) exceeding remaining stock were automatically rejected).`;
+    }
+
     return res.status(200).json({
       success: true,
-      message: `Request has been ${status} successfully.`,
+      message: successMsg,
       data: request,
     });
   } catch (error) {
@@ -491,6 +615,7 @@ const generateReport = async (req, res) => {
 module.exports = {
   getDashboardStats,
   getAllDonations,
+  getDonationHistory,
   verifyDonation,
   getAllRequests,
   verifyRequest,

@@ -19,6 +19,7 @@ import AdminVerifyDonations from './pages/AdminVerifyDonations';
 import AdminVerifyRequests from './pages/AdminVerifyRequests';
 import AdminUsers from './pages/AdminUsers';
 import AdminReports from './pages/AdminReports';
+import AdminDonationHistory from './pages/AdminDonationHistory';
 
 // Protected Route Guard
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -194,6 +195,14 @@ function AppContent() {
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <AdminReports />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/donation-history"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminDonationHistory />
               </ProtectedRoute>
             }
           />
